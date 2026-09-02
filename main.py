@@ -2,8 +2,8 @@ import asyncio
 import importlib
 import os
 from pathlib import Path
-import mycord
 
+import mycord
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -50,46 +50,37 @@ async def load_systems(bot_folder, bot):
     if not systems.exists():
         return
 
-    for system in systems.iterdir():
+    for file in systems.rglob("*.py"):
 
-        if not system.is_dir():
+        if file.name == "__init__.py":
             continue
 
-        for folder in ("commands", "listeners"):
+        relative = file.relative_to(ROOT)
 
-            directory = system / folder
+        module_name = ".".join(
+            relative.with_suffix("").parts
+        )
 
-            if not directory.exists():
+        try:
+            module = importlib.import_module(module_name)
+
+            setup = getattr(module, "setup", None)
+
+            if setup is None:
                 continue
 
-            for file in directory.glob("*.py"):
+            result = setup(bot)
 
-                if file.name == "__init__.py":
-                    continue
+            if hasattr(result, "__await__"):
+                await result
 
-                module_name = (
-                    f"{bot_folder.name}.systems."
-                    f"{system.name}.{folder}.{file.stem}"
-                )
+            print(f"[LOADED] {module_name}")
 
-                try:
-                    module = importlib.import_module(module_name)
-
-                    setup = getattr(module, "setup", None)
-
-                    if setup:
-                        result = setup(bot)
-
-                        if hasattr(result, "__await__"):
-                            await result
-
-                    print(f"[LOADED] {module_name}")
-
-                except Exception as error:
-                    print(
-                        f"[ERROR] Failed to load "
-                        f"{module_name}: {error}"
-                    )
+        except Exception as error:
+            print(
+                f"[ERROR] Failed to load "
+                f"{module_name}: {error}"
+            )
 
 
 # =========================================
