@@ -9,7 +9,7 @@ class Bot(commands.Bot):
         self.bot_name = Path(__file__).parent.name
 
         super().__init__(
-            command_prefix=f"Atlas ",
+            command_prefix="Atlas ",
             intents=discord.Intents.all()
         )
 
