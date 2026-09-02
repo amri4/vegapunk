@@ -2,6 +2,7 @@ import asyncio
 import importlib
 import os
 from pathlib import Path
+import mycord
 
 from dotenv import load_dotenv
 
