@@ -1,8 +1,11 @@
 import asyncio
 import importlib
+import os
 from pathlib import Path
-import mycord
 
+from dotenv import load_dotenv
+
+load_dotenv()
 
 ROOT = Path(__file__).parent
 
@@ -22,7 +25,6 @@ def find_bots():
         try:
             module = importlib.import_module(f"{folder.name}.bot")
             bot = module.bot
-
             bots.append((folder, bot))
 
         except Exception as error:
@@ -31,7 +33,7 @@ def find_bots():
     return bots
 
 
-async def load_cogs(bot_folder, bot):
+async def load_systems(bot_folder, bot):
     systems = bot_folder / "systems"
 
     if not systems.exists():
@@ -44,18 +46,27 @@ async def load_cogs(bot_folder, bot):
 
         try:
             await bot.load_extension(module_name)
+            print(f"[SYSTEM] Loaded {module_name}")
 
         except Exception as error:
             print(f"[ERROR] Failed to load {module_name}: {error}")
 
 
 async def run_bot(bot_folder, bot):
-    await load_cogs(bot_folder, bot)
+    await load_systems(bot_folder, bot)
 
-    token = bot.token
+    tokens = {
+        "atlas": os.getenv("ATLAS_TOKEN"),
+        "lilith": os.getenv("LILITH_TOKEN"),
+        "shaka": os.getenv("SHAKA_TOKEN"),
+        "york": os.getenv("YORK_TOKEN"),
+        "pythagoras": os.getenv("PYTHAGORAS_TOKEN"),
+    }
+
+    token = tokens.get(bot_folder.name.lower())
 
     if not token:
-        print(f"[ERROR] No token for {bot_folder.name}")
+        print(f"[ERROR] No token found for {bot_folder.name}")
         return
 
     try:
