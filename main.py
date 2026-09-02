@@ -1,6 +1,7 @@
 import asyncio
 import importlib
 from pathlib import Path
+import mycord
 
 
 ROOT = Path(__file__).parent
