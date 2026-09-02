@@ -16,7 +16,7 @@ class Bot(commands.Bot):
         self.token = os.getenv("ATLAS_TOKEN")
 
         super().__init__(
-            command_prefix=f"{self.bot_name} ",
+            command_prefix="Atlas ",
             intents=discord.Intents.all()
         )
 
