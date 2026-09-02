@@ -2,6 +2,10 @@ import discord
 from discord.ext import commands
 
 
+# =========================================
+# HELP VIEW
+# =========================================
+
 class HelpView(discord.ui.View):
 
     def __init__(self, pages, author):
@@ -13,13 +17,25 @@ class HelpView(discord.ui.View):
 
         self.update_buttons()
 
+    # =====================================
+    # BUTTON STATE
+    # =====================================
+
     def update_buttons(self):
+
         self.previous.disabled = self.page == 0
         self.next.disabled = self.page == len(self.pages) - 1
 
-        self.page_button.label = f"{self.page + 1} / {len(self.pages)}"
+        self.page_button.label = (
+            f"{self.page + 1} / {len(self.pages)}"
+        )
+
+    # =====================================
+    # EMBED
+    # =====================================
 
     def get_embed(self):
+
         category, commands_list = self.pages[self.page]
 
         embed = discord.Embed(
@@ -28,6 +44,7 @@ class HelpView(discord.ui.View):
         )
 
         for command in commands_list:
+
             description = command.help or "No description."
 
             embed.add_field(
@@ -38,15 +55,26 @@ class HelpView(discord.ui.View):
 
         return embed
 
+    # =====================================
+    # ONLY COMMAND USER CAN USE BUTTONS
+    # =====================================
+
     async def interaction_check(self, interaction):
+
         if interaction.user != self.author:
+
             await interaction.response.send_message(
                 "This help menu isn't yours.",
                 ephemeral=True
             )
+
             return False
 
         return True
+
+    # =====================================
+    # PREVIOUS
+    # =====================================
 
     @discord.ui.button(
         label="◀️",
@@ -64,13 +92,22 @@ class HelpView(discord.ui.View):
             view=self
         )
 
+    # =====================================
+    # PAGE NUMBER
+    # =====================================
+
     @discord.ui.button(
         label="1 / 1",
         style=discord.ButtonStyle.secondary,
         disabled=True
     )
     async def page_button(self, interaction, button):
+
         pass
+
+    # =====================================
+    # NEXT
+    # =====================================
 
     @discord.ui.button(
         label="▶️",
@@ -89,7 +126,35 @@ class HelpView(discord.ui.View):
         )
 
 
+# =========================================
+# HELP COMMAND
+# =========================================
+
 class BotHelpCommand(commands.HelpCommand):
+
+    # =====================================
+    # CATEGORY
+    # =====================================
+
+    def get_category(self, command):
+
+        module = command.callback.__module__
+
+        parts = module.split(".")
+
+        try:
+
+            systems_index = parts.index("systems")
+
+            return parts[systems_index + 1]
+
+        except (ValueError, IndexError):
+
+            return "Other"
+
+    # =====================================
+    # SEND ALL HELP
+    # =====================================
 
     async def send_bot_help(self, mapping):
 
@@ -99,22 +164,10 @@ class BotHelpCommand(commands.HelpCommand):
 
         for command in bot.commands:
 
-            # Ignore hidden commands
             if command.hidden:
                 continue
 
-            module = command.callback.__module__
-
-            parts = module.split(".")
-
-            # Expected:
-            # bot.systems.category.commands.file
-            try:
-                systems_index = parts.index("systems")
-                category = parts[systems_index + 1]
-
-            except (ValueError, IndexError):
-                category = "Other"
+            category = self.get_category(command)
 
             categories.setdefault(category, [])
 
@@ -124,16 +177,26 @@ class BotHelpCommand(commands.HelpCommand):
 
         for category, commands_list in categories.items():
 
-            commands_list.sort(key=lambda command: command.name)
+            commands_list.sort(
+                key=lambda command: command.name
+            )
 
             pages.append(
                 (category, commands_list)
             )
 
+        # Sort categories alphabetically
+
+        pages.sort(
+            key=lambda page: page[0].lower()
+        )
+
         if not pages:
+
             await self.get_destination().send(
                 "There are no commands available."
             )
+
             return
 
         view = HelpView(
@@ -146,5 +209,132 @@ class BotHelpCommand(commands.HelpCommand):
             view=view
         )
 
+    # =====================================
+    # SEND COMMAND HELP
+    # =====================================
+
+    async def send_command_help(self, command):
+
+        if command.hidden:
+
+            await self.get_destination().send(
+                "That command doesn't exist."
+            )
+
+            return
+
+        category = self.get_category(command)
+
+        prefix = self.context.bot.command_prefix
+
+        # =================================
+        # GET PREFIX
+        # =================================
+
+        if callable(prefix):
+
+            prefix = await prefix(
+                self.context.bot,
+                self.context.message
+            )
+
+        # =================================
+        # AUTOMATIC USAGE
+        # =================================
+
+        if command.usage:
+
+            usage = command.usage
+
+        else:
+
+            usage_parts = []
+
+            for parameter in command.clean_params.values():
+
+                name = parameter.name
+
+                # *args / **kwargs style parameter
+
+                if parameter.kind == parameter.VAR_POSITIONAL:
+
+                    usage_parts.append(
+                        f"[{name}...]"
+                    )
+
+                # Parameter has a default value
+
+                elif parameter.default is not parameter.empty:
+
+                    usage_parts.append(
+                        f"[{name}]"
+                    )
+
+                # Required parameter
+
+                else:
+
+                    usage_parts.append(
+                        f"<{name}>"
+                    )
+
+            usage = " ".join(usage_parts)
+
+        # =================================
+        # FULL USAGE
+        # =================================
+
+        full_usage = f"{prefix}{command.name}"
+
+        if usage:
+
+            full_usage += f" {usage}"
+
+        # =================================
+        # EMBED
+        # =================================
+
+        embed = discord.Embed(
+            title=f"📖 {command.name}",
+            description=command.help or "No description."
+        )
+
+        embed.add_field(
+            name="Usage",
+            value=f"`{full_usage}`",
+            inline=False
+        )
+
+        embed.add_field(
+            name="Category",
+            value=category.title(),
+            inline=False
+        )
+
+        # =================================
+        # ALIASES
+        # =================================
+
+        if command.aliases:
+
+            aliases = ", ".join(
+                f"`{alias}`"
+                for alias in command.aliases
+            )
+
+            embed.add_field(
+                name="Aliases",
+                value=aliases,
+                inline=False
+            )
+
+        await self.get_destination().send(
+            embed=embed
+        )
+
+
+# =========================================
+# HELP COMMAND INSTANCE
+# =========================================
 
 help_command = BotHelpCommand()
