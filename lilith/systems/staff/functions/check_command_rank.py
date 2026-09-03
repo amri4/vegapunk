@@ -21,5 +21,5 @@ def check_command_rank(member, command_name):
 
     return (
         member_rank["level"]
-        >= required["required_level"]
+        <= required["required_level"]
     )
