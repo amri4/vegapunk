@@ -1,10 +1,8 @@
-import discord
-
 from ..functions.check_command_rank import check_command_rank
 from ..functions.get_command_rank import get_command_rank
 
 
-async def on_command(ctx):
+async def check_command(ctx):
 
     if ctx.guild is None:
         return
@@ -28,11 +26,11 @@ async def on_command(ctx):
         f"or above to use this command."
     )
 
-    ctx.command.reset_cooldown(ctx)
+    raise PermissionError(
+        f"{ctx.author} does not have the required "
+        f"rank for {ctx.command.name}"
+    )
 
 
 def setup(bot):
-    bot.add_listener(
-        on_command,
-        "on_command"
-    )
+    bot.before_invoke(check_command)
