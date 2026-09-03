@@ -63,7 +63,10 @@ class HelpView(discord.ui.View):
     def update_buttons(self):
 
         self.previous.disabled = self.page == 0
-        self.next.disabled = self.page == len(self.pages) - 1
+
+        self.next.disabled = (
+            self.page == len(self.pages) - 1
+        )
 
         self.page_button.label = (
             f"{self.page + 1} / {len(self.pages)}"
@@ -133,12 +136,14 @@ class HelpView(discord.ui.View):
     )
     async def previous(self, interaction, button):
 
+        await interaction.response.defer()
+
         if self.page > 0:
             self.page -= 1
 
         self.update_buttons()
 
-        await interaction.response.edit_message(
+        await interaction.edit_original_response(
             embed=self.get_embed(),
             view=self
         )
@@ -166,12 +171,14 @@ class HelpView(discord.ui.View):
     )
     async def next(self, interaction, button):
 
+        await interaction.response.defer()
+
         if self.page < len(self.pages) - 1:
             self.page += 1
 
         self.update_buttons()
 
-        await interaction.response.edit_message(
+        await interaction.edit_original_response(
             embed=self.get_embed(),
             view=self
         )
@@ -236,7 +243,9 @@ class BotHelpCommand(commands.HelpCommand):
                 (category, commands_list)
             )
 
-        # Sort categories alphabetically
+        # =================================
+        # SORT CATEGORIES
+        # =================================
 
         pages.sort(
             key=lambda page: page[0].lower()
