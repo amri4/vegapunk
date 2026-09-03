@@ -1,10 +1,7 @@
 import discord
 from discord.ext import commands
 
-import mycord
-
-
-db = mycord.PunksDB()
+from ..functions.get_config import get_config
 
 
 @commands.command(
@@ -15,6 +12,10 @@ async def setmemberrole(
     ctx,
     role: discord.Role
 ):
+
+    get_config(ctx.guild)
+
+    from ..tables import db
 
     db.update(
         "server_config",
