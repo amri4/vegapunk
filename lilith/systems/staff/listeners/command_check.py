@@ -1,5 +1,6 @@
 from ..functions.check_command_rank import check_command_rank
 from ..functions.get_command_rank import get_command_rank
+from discord.ext import commands
 
 
 async def check_command(ctx):
@@ -26,9 +27,8 @@ async def check_command(ctx):
         f"or above to use this command."
     )
 
-    raise PermissionError(
-        f"{ctx.author} does not have the required "
-        f"rank for {ctx.command.name}"
+    raise commands.CheckFailure(
+        "Insufficient staff rank."
     )
 
 
