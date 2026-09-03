@@ -1,17 +1,21 @@
-import discord
+import mycord
+
+from discord import Member
 from discord.ext import commands
 
 from ..functions.get_member_rank import get_member_rank
-from ..functions.find_rank import find_rank
+
+
+db = mycord.PunksDB()
 
 
 @commands.command(
     name="demote",
-    help="Remove a member's staff hierarchy rank."
+    help="Demote a member to the next lower staff rank."
 )
 async def demote(
     ctx,
-    member: discord.Member
+    member: Member
 ):
 
     current_rank = get_member_rank(member)
@@ -22,19 +26,52 @@ async def demote(
         )
         return
 
-    role = ctx.guild.get_role(
+    lower_rank = db.fetchone(
+        "staff_ranks",
+        "guild_id = ? AND level < ?",
+        (
+            ctx.guild.id,
+            current_rank["level"]
+        )
+    )
+
+    if lower_rank is None:
+        await member.remove_roles(
+            ctx.guild.get_role(current_rank["role_id"]),
+            reason=f"Demoted by {ctx.author}"
+        )
+
+        await ctx.send(
+            f"⬇️ Removed **{current_rank['name']}** "
+            f"from {member.mention}. They had the lowest rank."
+        )
+
+        return
+
+    current_role = ctx.guild.get_role(
         current_rank["role_id"]
     )
 
-    if role is not None:
+    lower_role = ctx.guild.get_role(
+        lower_rank["role_id"]
+    )
+
+    if current_role:
         await member.remove_roles(
-            role,
+            current_role,
+            reason=f"Demoted by {ctx.author}"
+        )
+
+    if lower_role:
+        await member.add_roles(
+            lower_role,
             reason=f"Demoted by {ctx.author}"
         )
 
     await ctx.send(
-        f"⬇️ Removed **{current_rank['name']}** "
-        f"from {member.mention}."
+        f"⬇️ {member.mention} was demoted from "
+        f"**{current_rank['name']}** to "
+        f"**{lower_rank['name']}**."
     )
 
 
