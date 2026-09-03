@@ -15,8 +15,14 @@ async def hierarchy(ctx):
         "staff_ranks"
     )
 
+    ranks = [
+        row
+        for row in rows
+        if row[0] == ctx.guild.id
+    ]
+
     await ctx.send(
-        str(rows[0])
+        f"👑 Found **{len(ranks)}** staff ranks in this server."
     )
 
 
