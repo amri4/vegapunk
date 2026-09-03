@@ -1,6 +1,44 @@
 import discord
 from discord.ext import commands
 
+import mycord
+
+
+db = mycord.PunksDB()
+
+
+# =========================================
+# STAFF RANK
+# =========================================
+
+def get_command_rank(guild, command_name):
+
+    if guild is None:
+        return None
+
+    command_rank = db.fetchone(
+        "command_ranks",
+        "guild_id = ? AND command_name = ?",
+        (
+            guild.id,
+            command_name.lower()
+        )
+    )
+
+    if command_rank is None:
+        return None
+
+    rank = db.fetchone(
+        "staff_ranks",
+        "guild_id = ? AND level = ?",
+        (
+            guild.id,
+            command_rank["required_level"]
+        )
+    )
+
+    return rank
+
 
 # =========================================
 # HELP VIEW
@@ -8,11 +46,12 @@ from discord.ext import commands
 
 class HelpView(discord.ui.View):
 
-    def __init__(self, pages, author):
+    def __init__(self, pages, author, guild):
         super().__init__(timeout=120)
 
         self.pages = pages
         self.author = author
+        self.guild = guild
         self.page = 0
 
         self.update_buttons()
@@ -46,6 +85,18 @@ class HelpView(discord.ui.View):
         for command in commands_list:
 
             description = command.help or "No description."
+
+            rank = get_command_rank(
+                self.guild,
+                command.name
+            )
+
+            if rank:
+
+                description += (
+                    f"\n\n**Required rank:** "
+                    f"{rank['name']} or above"
+                )
 
             embed.add_field(
                 name=f"`{command.name}`",
@@ -201,7 +252,8 @@ class BotHelpCommand(commands.HelpCommand):
 
         view = HelpView(
             pages,
-            self.context.author
+            self.context.author,
+            self.context.guild
         )
 
         await self.get_destination().send(
@@ -310,6 +362,23 @@ class BotHelpCommand(commands.HelpCommand):
             value=category.title(),
             inline=False
         )
+
+        # =================================
+        # REQUIRED RANK
+        # =================================
+
+        rank = get_command_rank(
+            self.context.guild,
+            command.name
+        )
+
+        if rank:
+
+            embed.add_field(
+                name="Required rank",
+                value=f"{rank['name']} or above",
+                inline=False
+            )
 
         # =================================
         # ALIASES
