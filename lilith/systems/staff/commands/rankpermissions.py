@@ -12,7 +12,7 @@ async def rankpermissions(
     ctx,
     rank_name: str,
     permission: str,
-    value: bool
+    value: str
 ):
 
     rank = find_rank(
@@ -37,16 +37,29 @@ async def rankpermissions(
         return
 
     permission = permission.lower().strip()
+    value = value.lower().strip()
 
-    valid_permissions = {
-        name
-        for name, value in vars(
-            discord.Permissions()
-        ).items()
-        if isinstance(value, bool)
+    valid_values = {
+        "on": True,
+        "true": True,
+        "yes": True,
+        "enable": True,
+        "enabled": True,
+
+        "off": False,
+        "false": False,
+        "no": False,
+        "disable": False,
+        "disabled": False
     }
 
-    if permission not in valid_permissions:
+    if value not in valid_values:
+        await ctx.send(
+            "❌ Use `on` or `off` for the permission value."
+        )
+        return
+
+    if permission not in discord.Permissions.VALID_FLAGS:
         await ctx.send(
             f"❌ `{permission}` isn't a valid Discord permission."
         )
@@ -57,7 +70,7 @@ async def rankpermissions(
     setattr(
         permissions,
         permission,
-        value
+        valid_values[value]
     )
 
     await role.edit(
@@ -65,7 +78,7 @@ async def rankpermissions(
         reason=f"Rank permissions changed by {ctx.author}"
     )
 
-    status = "enabled" if value else "disabled"
+    status = "enabled" if valid_values[value] else "disabled"
 
     await ctx.send(
         f"✅ **{rank['name']}**: "
