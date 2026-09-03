@@ -25,12 +25,7 @@ async def verification(
 
     enabled = 1 if state == "on" else 0
 
-    db.add_column(
-        "server_config",
-        "verification_enabled",
-        "INTEGER"
-    )
-
+    
     db.update(
         "server_config",
         "verification_enabled = ?",
