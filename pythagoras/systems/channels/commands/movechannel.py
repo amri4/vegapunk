@@ -2,61 +2,117 @@ import discord
 from discord.ext import commands
 
 from ..functions.find_channel import find_channel
-from ..functions.find_category import find_category
 
 
 @commands.command(
     name="movechannel",
-    help="Move a channel above or below another channel or category."
+    help="Move a channel above or below another channel.",
+    usage="<channel> <above/below> <target>"
 )
-async def movechannel(
-    ctx,
-    channel_input: str = None,
-    position: str = None,
-    target_input: str = None
-):
+async def movechannel(ctx, *, arguments: str):
 
-    if not channel_input:
-        await ctx.send("❌ Please specify a channel.")
+    parts = arguments.split()
+
+    if len(parts) < 3:
+        await ctx.send(
+            "❌ Usage: "
+            "`Pythagoras movechannel <channel> "
+            "<above/below> <target>`"
+        )
         return
 
-    if position is None or position.lower() not in ("above", "below"):
-        await ctx.send("❌ Position must be `above` or `below`.")
+    # FIND SOURCE CHANNEL
+
+    source = None
+    source_end = None
+
+    for i in range(1, len(parts)):
+
+        possible = " ".join(parts[:i])
+
+        found = find_channel(
+            ctx.guild,
+            possible
+        )
+
+        if found:
+            source = found
+            source_end = i
+            break
+
+    if not source:
+        await ctx.send(
+            "❌ I couldn't find the channel "
+            "you want to move."
+        )
         return
 
-    if not target_input:
-        await ctx.send("❌ Please specify the target.")
+    # DIRECTION
+
+    if source_end >= len(parts):
+        await ctx.send(
+            "❌ Please specify `above` or `below`."
+        )
         return
 
-    channel = find_channel(ctx.guild, channel_input)
+    direction = parts[source_end].lower()
 
-    if channel is None:
-        await ctx.send("❌ Channel not found.")
+    if direction not in ("above", "below"):
+        await ctx.send(
+            "❌ Direction must be `above` or `below`."
+        )
         return
 
-    target = find_channel(ctx.guild, target_input)
+    # FIND TARGET
 
-    if target is None:
-        target = find_category(ctx.guild, target_input)
+    target_text = " ".join(
+        parts[source_end + 1:]
+    )
 
-    if target is None:
-        await ctx.send("❌ Target channel or category not found.")
+    target = find_channel(
+        ctx.guild,
+        target_text
+    )
+
+    if not target:
+        await ctx.send(
+            "❌ I couldn't find the target channel."
+        )
         return
 
-    if channel == target:
-        await ctx.send("❌ You can't move a channel relative to itself.")
+    if source.id == target.id:
+        await ctx.send(
+            "❌ You can't move a channel "
+            "relative to itself."
+        )
         return
 
-    if position.lower() == "above":
-        new_position = target.position + 1
+    # SAME CATEGORY
+
+    if source.category_id != target.category_id:
+        await ctx.send(
+            "❌ Both channels must be "
+            "in the same category."
+        )
+        return
+
+    # MOVE
+
+    target_position = target.position
+
+    if direction == "above":
+        new_position = target_position
     else:
-        new_position = target.position - 1
+        new_position = target_position + 1
 
-    await channel.edit(position=new_position)
+    await source.edit(
+        position=new_position,
+        reason=f"Moved by {ctx.author}"
+    )
 
     await ctx.send(
-        f"✅ Moved {channel.mention} "
-        f"**{position.lower()}** **{target.name}**."
+        f"📁 Moved {source.mention} "
+        f"**{direction}** {target.mention}."
     )
 
 
