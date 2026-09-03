@@ -15,7 +15,9 @@ async def hierarchy(ctx):
         "staff_ranks"
     )
 
-    await ctx.send(f"Rows: {rows}")
+    await ctx.send(
+        str(rows[0])
+    )
 
 
 def setup(bot):
