@@ -1,4 +1,8 @@
+import mycord
 from discord.ext import commands
+
+
+db = mycord.PunksDB()
 
 
 @commands.command(
@@ -7,8 +11,12 @@ from discord.ext import commands
 )
 async def hierarchy(ctx):
 
+    rows = db.fetchall(
+        "staff_ranks"
+    )
+
     await ctx.send(
-        "👑 Hierarchy command is working."
+        f"👑 Found **{len(rows)}** total staff ranks."
     )
 
 
