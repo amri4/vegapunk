@@ -10,9 +10,7 @@ from ..functions.get_config import get_config
 )
 async def config(ctx):
 
-    data = get_config(
-        ctx.guild
-    )
+    data = get_config(ctx.guild)
 
     if not data:
         await ctx.send(
@@ -20,83 +18,17 @@ async def config(ctx):
         )
         return
 
-    # =====================================
-    # MEMBER ROLE
-    # =====================================
-
-    member_role_id = data[1]
-
-    member_role = (
-        ctx.guild.get_role(
-            member_role_id
-        )
-        if member_role_id
-        else None
-    )
-
-    # =====================================
-    # VERIFICATION CHANNEL
-    # =====================================
-
-    verification_channel_id = data[2]
-
-    verification_channel = (
-        ctx.guild.get_channel(
-            verification_channel_id
-        )
-        if verification_channel_id
-        else None
-    )
-
-    # =====================================
-    # VERIFICATION
-    # =====================================
-
-    verification_enabled = data[3]
-
-    # =====================================
-    # TICKET PANEL CHANNEL
-    # =====================================
-
-    ticket_panel_channel_id = data[4]
-
-    ticket_panel_channel = (
-        ctx.guild.get_channel(
-            ticket_panel_channel_id
-        )
-        if ticket_panel_channel_id
-        else None
-    )
-
-    # =====================================
-    # TICKET CATEGORY
-    # =====================================
-
-    ticket_category_id = data[5]
-
-    ticket_category = (
-        ctx.guild.get_channel(
-            ticket_category_id
-        )
-        if ticket_category_id
-        else None
-    )
-
-    # =====================================
-    # EMBED
-    # =====================================
-
     embed = discord.Embed(
         title="⚙️ Server Configuration",
-        description=(
-            f"Configuration for **{ctx.guild.name}**"
-        ),
+        description=f"Configuration for **{ctx.guild.name}**",
         color=discord.Color.blue()
     )
 
-    # =====================================
-    # MEMBER ROLE
-    # =====================================
+    # Member Role
+    member_role = None
+
+    if len(data) > 1 and data[1]:
+        member_role = ctx.guild.get_role(data[1])
 
     embed.add_field(
         name="👤 Member Role",
@@ -108,9 +40,11 @@ async def config(ctx):
         inline=True
     )
 
-    # =====================================
-    # VERIFICATION CHANNEL
-    # =====================================
+    # Verification Channel
+    verification_channel = None
+
+    if len(data) > 2 and data[2]:
+        verification_channel = ctx.guild.get_channel(data[2])
 
     embed.add_field(
         name="✅ Verification Channel",
@@ -122,9 +56,12 @@ async def config(ctx):
         inline=True
     )
 
-    # =====================================
-    # VERIFICATION
-    # =====================================
+    # Verification
+    verification_enabled = (
+        bool(data[3])
+        if len(data) > 3 and data[3] is not None
+        else False
+    )
 
     embed.add_field(
         name="🔐 Verification",
@@ -136,9 +73,11 @@ async def config(ctx):
         inline=True
     )
 
-    # =====================================
-    # TICKET PANEL CHANNEL
-    # =====================================
+    # Ticket Panel Channel
+    ticket_panel_channel = None
+
+    if len(data) > 4 and data[4]:
+        ticket_panel_channel = ctx.guild.get_channel(data[4])
 
     embed.add_field(
         name="🎫 Ticket Panel Channel",
@@ -150,31 +89,11 @@ async def config(ctx):
         inline=True
     )
 
-    # =====================================
-    # TICKET CATEGORY
-    # =====================================
-
-    embed.add_field(
-        name="📁 Ticket Category",
-        value=(
-            ticket_category.name
-            if ticket_category
-            else "❌ Not configured"
-        ),
-        inline=True
-    )
-
-    # =====================================
-    # FOOTER
-    # =====================================
-
     embed.set_footer(
         text="Pythagoras • Server Configuration"
     )
 
-    await ctx.send(
-        embed=embed
-    )
+    await ctx.send(embed=embed)
 
 
 def setup(bot):
