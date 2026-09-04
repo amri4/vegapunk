@@ -14,7 +14,30 @@ db = mycord.PunksDB()
     name="moverank",
     help="Move a staff rank to another level."
 )
-async def moverank(ctx, new_level: int, *, argument: str):
+async def moverank(ctx, *, arguments: str):
+
+    parts = arguments.rsplit(" ", 1)
+
+    if len(parts) != 2:
+
+        await ctx.send(
+            "❌ Usage: `lilith moverank <rank> <level>`"
+        )
+
+        return
+
+    argument, level_text = parts
+
+    try:
+        new_level = int(level_text)
+
+    except ValueError:
+
+        await ctx.send(
+            "❌ The new level must be a number."
+        )
+
+        return
 
     # =========================================
     # VALIDATE LEVEL
@@ -46,16 +69,17 @@ async def moverank(ctx, new_level: int, *, argument: str):
         return
 
     guild_id = rank[0]
+    rank_name = rank[1]
     old_level = rank[3]
 
     # =========================================
-    # ALREADY THERE
+    # ALREADY AT LEVEL
     # =========================================
 
     if old_level == new_level:
 
         await ctx.send(
-            f"❌ **{rank[1]}** is already Level {new_level}."
+            f"❌ **{rank_name}** is already Level {new_level}."
         )
 
         return
@@ -68,106 +92,108 @@ async def moverank(ctx, new_level: int, *, argument: str):
         ctx.guild
     )
 
-    # =========================================
-    # MOVING UP
-    # =========================================
+    max_level = max(
+        other[3]
+        for other in ranks
+    )
 
-    if new_level < old_level:
+    if new_level > max_level:
 
-        affected = [
-            other
-            for other in ranks
-            if new_level <= other[3] < old_level
-        ]
-
-        affected.sort(
-            key=lambda other: other[3],
-            reverse=True
+        await ctx.send(
+            f"❌ Level {new_level} does not exist."
         )
 
-        try:
+        return
 
-            for other in affected:
+    # =========================================
+    # CALCULATE FINAL LEVELS
+    # =========================================
 
-                db.update(
-                    "staff_ranks",
-                    "level = ?",
-                    "guild_id = ? AND level = ?",
-                    (
-                        other[3] + 1,
-                        guild_id,
-                        other[3]
-                    )
-                )
+    final_levels = {}
+
+    for other in ranks:
+
+        other_role_id = other[2]
+        other_level = other[3]
+
+        if other_role_id == rank[2]:
+
+            final_levels[other_role_id] = new_level
+
+        elif new_level < old_level:
+
+            if new_level <= other_level < old_level:
+                final_levels[other_role_id] = other_level + 1
+
+            else:
+                final_levels[other_role_id] = other_level
+
+        else:
+
+            if old_level < other_level <= new_level:
+                final_levels[other_role_id] = other_level - 1
+
+            else:
+                final_levels[other_role_id] = other_level
+
+    # =========================================
+    # MOVE EVERYTHING TO TEMPORARY LEVELS
+    # =========================================
+
+    try:
+
+        for index, other in enumerate(ranks):
+
+            temporary_level = -(index + 1)
 
             db.update(
                 "staff_ranks",
                 "level = ?",
                 "guild_id = ? AND level = ?",
                 (
-                    new_level,
+                    temporary_level,
                     guild_id,
-                    old_level
+                    other[3]
                 )
             )
 
-        except Exception as error:
+    except Exception as error:
 
-            await ctx.send(
-                f"❌ Failed to move the rank: `{error}`"
-            )
-
-            return
-
-    # =========================================
-    # MOVING DOWN
-    # =========================================
-
-    else:
-
-        affected = [
-            other
-            for other in ranks
-            if old_level < other[3] <= new_level
-        ]
-
-        affected.sort(
-            key=lambda other: other[3]
+        await ctx.send(
+            f"❌ Failed to prepare the rank move: `{error}`"
         )
 
-        try:
+        return
 
-            for other in affected:
+    # =========================================
+    # APPLY FINAL LEVELS
+    # =========================================
 
-                db.update(
-                    "staff_ranks",
-                    "level = ?",
-                    "guild_id = ? AND level = ?",
-                    (
-                        other[3] - 1,
-                        guild_id,
-                        other[3]
-                    )
-                )
+    try:
+
+        for index, other in enumerate(ranks):
+
+            temporary_level = -(index + 1)
+            final_level = final_levels[other[2]]
 
             db.update(
                 "staff_ranks",
                 "level = ?",
                 "guild_id = ? AND level = ?",
                 (
-                    new_level,
+                    final_level,
                     guild_id,
-                    old_level
+                    temporary_level
                 )
             )
 
-        except Exception as error:
+    except Exception as error:
 
-            await ctx.send(
-                f"❌ Failed to move the rank: `{error}`"
-            )
+        await ctx.send(
+            f"❌ Failed to finish moving the rank: `{error}`"
+        )
 
-            return
+        return
 
     # =========================================
     # ARRANGE DISCORD ROLES
@@ -193,7 +219,7 @@ async def moverank(ctx, new_level: int, *, argument: str):
     # =========================================
 
     await ctx.send(
-        f"✅ Moved **{rank[1]}** "
+        f"✅ Moved **{rank_name}** "
         f"from Level {old_level} to Level {new_level}."
     )
 
