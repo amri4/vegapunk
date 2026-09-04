@@ -7,7 +7,10 @@ import mycord
 
 db = mycord.PunksDB()
 
-@commands.command()
+@commands.command(
+    name="createpanel",
+    help="create ticket pannel"
+)
 async def createpanel(ctx):
     await ctx.send("Command worked")
 
