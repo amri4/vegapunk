@@ -1,5 +1,5 @@
-async def get_message(bot, ctx):
-    message = await bot.wait_for(
+async def get_message(ctx):
+    message = await ctx.bot.wait_for(
         "message",
         check=lambda m: m.author == ctx.author and m.channel == ctx.channel
     )
