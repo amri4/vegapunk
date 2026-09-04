@@ -74,7 +74,7 @@ async def load_systems(bot_folder, bot):
             if hasattr(result, "__await__"):
                 await result
 
-            print(f"[LOADED] {module_name}")
+            
 
         except Exception as error:
             print(
