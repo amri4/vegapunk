@@ -25,6 +25,14 @@ async def addrank(ctx, level: int, *, name: str):
         )
         return
 
+    if not name.strip():
+        await ctx.send(
+            "❌ You must provide a rank name."
+        )
+        return
+
+    name = name.strip()
+
     # =========================================
     # GET EXISTING RANKS
     # =========================================
@@ -87,12 +95,7 @@ async def addrank(ctx, level: int, *, name: str):
 
         db.insert(
             "staff_ranks",
-            (
-                "guild_id",
-                "name",
-                "role_id",
-                "level"
-            ),
+            "guild_id, name, role_id, level",
             (
                 ctx.guild.id,
                 name,
@@ -103,7 +106,6 @@ async def addrank(ctx, level: int, *, name: str):
 
     except Exception as error:
 
-        # Prevent an orphan Discord role
         try:
             await role.delete(
                 reason="Failed to save staff rank to PunksDB."
@@ -113,49 +115,6 @@ async def addrank(ctx, level: int, *, name: str):
 
         await ctx.send(
             f"❌ Failed to save the staff rank: `{error}`"
-        )
-        return
-
-    # =========================================
-    # MOVE ROLE INTO STAFF HIERARCHY
-    # =========================================
-
-    ranks = get_ranks(ctx.guild)
-
-    ordered_ranks = sorted(
-        ranks,
-        key=lambda rank: rank[3]
-    )
-
-    # Discord role positions increase upward.
-    # Put Level 1 highest among staff ranks.
-    try:
-
-        position = ctx.guild.me.top_role.position
-
-        for rank in reversed(ordered_ranks):
-
-            rank_role = ctx.guild.get_role(
-                rank[2]
-            )
-
-            if rank_role is None:
-                continue
-
-            if rank_role == role:
-                continue
-
-            position -= 1
-
-        await role.edit(
-            position=max(1, position)
-        )
-
-    except (discord.Forbidden, discord.HTTPException):
-
-        await ctx.send(
-            f"✅ Created **Level {level} — {role.mention}**, "
-            "but I couldn't position the role automatically."
         )
         return
 
