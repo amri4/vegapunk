@@ -3,7 +3,7 @@ from discord.ext import commands
 
 import mycord
 
-from ..get_config import get_config
+from ..functions.get_config import get_config
 
 
 db = mycord.PunksDB()
