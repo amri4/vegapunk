@@ -13,9 +13,17 @@ def get_member_rank(member):
         for role in member.roles
     }
 
-    for rank in ranks:
+    member_ranks = [
+        rank
+        for rank in ranks
+        if rank[2] in member_role_ids
+    ]
 
-        if rank[2] in member_role_ids:
-            return rank
+    if not member_ranks:
+        return None
 
-    return None
+    # Level 1 is the highest rank.
+    return min(
+        member_ranks,
+        key=lambda rank: rank[3]
+    )
