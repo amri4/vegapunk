@@ -3,6 +3,8 @@ import asyncio
 import discord
 from discord.ext import commands
 
+from ..functions.get_message import get_message
+
 import mycord
 
 db = mycord.PunksDB()
