@@ -33,7 +33,7 @@ def get_command_rank(guild, command_name):
         "guild_id = ? AND level = ?",
         (
             guild.id,
-            command_rank["required_level"]
+            command_rank[2]
         )
     )
 
@@ -98,7 +98,14 @@ class HelpView(discord.ui.View):
 
                 description += (
                     f"\n\n**Required rank:** "
-                    f"{rank['name']} or above"
+                    f"{rank[1]} or above"
+                )
+
+            else:
+
+                description += (
+                    "\n\n**Required rank:** "
+                    "Everyone"
                 )
 
             embed.add_field(
@@ -204,9 +211,14 @@ class BotHelpCommand(commands.HelpCommand):
 
             systems_index = parts.index("systems")
 
-            return parts[systems_index + 1]
+            return parts[
+                systems_index + 1
+            ]
 
-        except (ValueError, IndexError):
+        except (
+            ValueError,
+            IndexError
+        ):
 
             return "Other"
 
@@ -225,11 +237,18 @@ class BotHelpCommand(commands.HelpCommand):
             if command.hidden:
                 continue
 
-            category = self.get_category(command)
+            category = self.get_category(
+                command
+            )
 
-            categories.setdefault(category, [])
+            categories.setdefault(
+                category,
+                []
+            )
 
-            categories[category].append(command)
+            categories[category].append(
+                command
+            )
 
         pages = []
 
@@ -240,7 +259,10 @@ class BotHelpCommand(commands.HelpCommand):
             )
 
             pages.append(
-                (category, commands_list)
+                (
+                    category,
+                    commands_list
+                )
             )
 
         # =================================
@@ -284,9 +306,13 @@ class BotHelpCommand(commands.HelpCommand):
 
             return
 
-        category = self.get_category(command)
+        category = self.get_category(
+            command
+        )
 
-        prefix = self.context.bot.command_prefix
+        prefix = (
+            self.context.bot.command_prefix
+        )
 
         # =================================
         # GET PREFIX
@@ -315,17 +341,23 @@ class BotHelpCommand(commands.HelpCommand):
 
                 name = parameter.name
 
-                # *args / **kwargs style parameter
+                # *args / **kwargs
 
-                if parameter.kind == parameter.VAR_POSITIONAL:
+                if (
+                    parameter.kind
+                    == parameter.VAR_POSITIONAL
+                ):
 
                     usage_parts.append(
                         f"[{name}...]"
                     )
 
-                # Parameter has a default value
+                # Optional parameter
 
-                elif parameter.default is not parameter.empty:
+                elif (
+                    parameter.default
+                    is not parameter.empty
+                ):
 
                     usage_parts.append(
                         f"[{name}]"
@@ -339,17 +371,23 @@ class BotHelpCommand(commands.HelpCommand):
                         f"<{name}>"
                     )
 
-            usage = " ".join(usage_parts)
+            usage = " ".join(
+                usage_parts
+            )
 
         # =================================
         # FULL USAGE
         # =================================
 
-        full_usage = f"{prefix}{command.name}"
+        full_usage = (
+            f"{prefix}{command.name}"
+        )
 
         if usage:
 
-            full_usage += f" {usage}"
+            full_usage += (
+                f" {usage}"
+            )
 
         # =================================
         # EMBED
@@ -357,7 +395,10 @@ class BotHelpCommand(commands.HelpCommand):
 
         embed = discord.Embed(
             title=f"📖 {command.name}",
-            description=command.help or "No description."
+            description=(
+                command.help
+                or "No description."
+            )
         )
 
         embed.add_field(
@@ -385,7 +426,17 @@ class BotHelpCommand(commands.HelpCommand):
 
             embed.add_field(
                 name="Required rank",
-                value=f"{rank['name']} or above",
+                value=(
+                    f"{rank[1]} or above"
+                ),
+                inline=False
+            )
+
+        else:
+
+            embed.add_field(
+                name="Required rank",
+                value="Everyone",
                 inline=False
             )
 
@@ -397,7 +448,8 @@ class BotHelpCommand(commands.HelpCommand):
 
             aliases = ", ".join(
                 f"`{alias}`"
-                for alias in command.aliases
+                for alias
+                in command.aliases
             )
 
             embed.add_field(
