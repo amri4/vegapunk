@@ -25,7 +25,7 @@ async def delpanel(ctx, pan):
         "panel_id = ?",
         (pan,)
     )
-    await ctx.send("delpanel working")
+    await ctx.send("✅️ Panel deleted")
 
 def setup(bot):
     bot.add_command(delpanel)
