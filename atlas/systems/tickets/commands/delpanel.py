@@ -22,6 +22,7 @@ async def delpanel(ctx, pan: int):
     )
     channel_id = config[4]
     message_id = panel[2]
+    channel = ctx.guild.get_channel(channel_id)
     message = await channel.fetch_message(message_id)
     await message.delete()
     
