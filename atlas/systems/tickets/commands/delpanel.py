@@ -9,13 +9,18 @@ db = mycord.PunksDB()
     name="delpanel",
     help="delete an existing delpanel"
 )
-async def delpanel(ctx, pan):
+async def delpanel(ctx, pan: int):
     panel = db.fetchone(
         "ticket_panels",
         "panel_id = ?",
         (pan,)
     )
-    
+    config = db.fetchone(
+        "server_config",
+        "guild_id = ?",
+        (guild.id,)
+    )
+    channel = config[4]
     message_id = panel[2]
     message = await channel.fetch_message(message_id)
     await message.delete()
