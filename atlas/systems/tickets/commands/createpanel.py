@@ -61,7 +61,13 @@ async def createpanel(ctx):
     if channel_id is None:
         await ctx.send("There is no ticket pannel channel configured, go ask pythagoras")
     
-    await channel.send(embed=embed)
+    message = await channel.send(embed=embed)
+
+    db.insert(
+        "ticket_panels",
+        "guild_id, message_id, title, description, image_url, thumbnail_url",
+        (ctx.guild.id, message.id, title, description, image_url, thumbnail_url)
+    )
     await ctx.send("✅️ Pannel created.")
 
 def setup(bot):
