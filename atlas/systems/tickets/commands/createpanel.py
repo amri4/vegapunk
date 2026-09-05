@@ -14,15 +14,18 @@ db = mycord.PunksDB()
     help="create ticket pannel"
 )
 async def createpanel(ctx):
-   
+
+    #TITLE
     await ctx.send("What title do you want for the pannel?")
     message = await get_message(ctx)
     title = message.content
 
+    #DESCRIPTION
     await ctx.send("Add discription")
     message = await get_message(ctx)
     description = message.content
 
+    #IMAGE
     await ctx.send("Add image or type `skip` to skip")
     message = await get_message(ctx)
     if message.content.lower() == "skip":
@@ -30,6 +33,7 @@ async def createpanel(ctx):
     else:
         image_url = message.attachments[0].url
 
+    #THUMBNAIL
     await ctx.send("Add thumbnail or type `skip` to skip")
     message = await get_message(ctx)
     if message.content.lower() == "skip":
@@ -37,6 +41,7 @@ async def createpanel(ctx):
     else:
         thumbnail_url = message.attachments[0].url
 
+    #EMBED
     embed = discord.Embed(
         title=f"{title}",
         description=f"{description}",
@@ -44,8 +49,19 @@ async def createpanel(ctx):
     )
     embed.set_image(url=image_url)
     embed.set_thumbnail(url=thumbnail_url)
+
+    #EMBED CHANNEL
+    config = db.fetchone(
+        "server_config",
+        "guild_id = ?",
+        (ctx.guild.id,)
+    )
+    channel_id = config[4]
+    channel = ctx.guild.get_channel(channel_id)
+    if channel is None:
+        await ctx.send("There is no ticket pannel channel configured, go ask pythagoras")
     
-    await ctx.send(embed=embed)
+    await channel.send(embed=embed)
 
 def setup(bot):
     bot.add_command(createpanel)
