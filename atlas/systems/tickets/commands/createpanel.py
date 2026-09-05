@@ -76,7 +76,9 @@ async def createpanel(ctx):
     )
     panel_id = panel[0]
 
-    embed.set_footer(f"PANEL_ID: {panel_id}")
+    embed.set_footer(text=f"PANEL_ID: {panel_id}")
+    await message.edit(embed=embed)
+    
     await ctx.send("✅️ Pannel created.")
 
 def setup(bot):
