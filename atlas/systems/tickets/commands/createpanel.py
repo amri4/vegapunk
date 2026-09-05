@@ -23,7 +23,7 @@ async def createpanel(ctx):
     message = await get_message(ctx)
     description = message.content
 
-    await ctx.send("Add image")
+    await ctx.send("Add image or type `skip` to skip")
     message = await get_message(ctx)
     if message.content.lower() == "skip":
         image_url = None
