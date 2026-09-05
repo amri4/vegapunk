@@ -69,6 +69,14 @@ async def createpanel(ctx):
         "guild_id, message_id, title, description, image_url, thumbnail_url",
         (ctx.guild.id, message.id, title, description, image_url, thumbnail_url)
     )
+    panel = db.fetchone(
+        "ticket_panels",
+        "message_id = ?",
+        (message.id,)
+    )
+    panel_id = panel[0]
+
+    embed.set_footer(f"PANEL_ID: {panel_id}")
     await ctx.send("✅️ Pannel created.")
 
 def setup(bot):
