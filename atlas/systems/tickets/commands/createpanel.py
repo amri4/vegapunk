@@ -15,6 +15,18 @@ db = mycord.PunksDB()
 )
 async def createpanel(ctx):
 
+    #CHECK IF EMBED CHANNEL IS CONFIGURED
+    config = db.fetchone(
+        "server_config",
+        "guild_id = ?",
+        (ctx.guild.id,)
+    )
+    channel_id = config[4]
+    channel = ctx.guild.get_channel(channel_id)
+    if channel_id is None:
+        await ctx.send("There is no ticket pannel channel configured, go ask pythagoras")
+        return
+
     #TITLE
     await ctx.send("What title do you want for the pannel?")
     message = await get_message(ctx)
@@ -49,18 +61,6 @@ async def createpanel(ctx):
     )
     embed.set_image(url=image_url)
     embed.set_thumbnail(url=thumbnail_url)
-
-    #EMBED CHANNEL
-    config = db.fetchone(
-        "server_config",
-        "guild_id = ?",
-        (ctx.guild.id,)
-    )
-    channel_id = config[4]
-    channel = ctx.guild.get_channel(channel_id)
-    if channel_id is None:
-        await ctx.send("There is no ticket pannel channel configured, go ask pythagoras")
-        return
     
     message = await channel.send(embed=embed)
 
