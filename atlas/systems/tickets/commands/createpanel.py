@@ -64,7 +64,6 @@ async def createpanel(ctx):
     
     message = await channel.send(embed=embed)
 
-    print("BEFORE INSERT")
     db.insert(
         "ticket_panels",
         """
@@ -82,19 +81,15 @@ async def createpanel(ctx):
          thumbnail_url
         )
     )
-    print("AFTER INSERT")
     panel = db.fetchone(
         "ticket_panels",
         "message_id = ?",
         (message.id,)
     )
-    print("FETCHED", panel)
     panel_id = panel[0]
-    print("PANEL_ID:", panel_id)
 
     embed.set_footer(text=f"PANEL_ID: {panel_id}")
     await message.edit(embed=embed)
-    print("EDITED")
     
     await ctx.send("✅️ Pannel created.")
 
