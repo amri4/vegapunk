@@ -67,8 +67,20 @@ async def createpanel(ctx):
     print("BEFORE INSERT")
     db.insert(
         "ticket_panels",
-        "guild_id, message_id, title, description, image_url, thumbnail_url",
-        (ctx.guild.id, message.id, title, description, image_url, thumbnail_url)
+        """
+        guild_id,
+        message_id,
+        title,
+        description,
+        image_url,
+        thumbnail_url
+        """,
+        (ctx.guild.id,
+         message.id, title,
+         description,
+         image_url,
+         thumbnail_url
+        )
     )
     print("AFTER INSERT")
     panel = db.fetchone(
