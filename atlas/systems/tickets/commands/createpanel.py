@@ -62,6 +62,7 @@ async def createpanel(ctx):
         await ctx.send("There is no ticket pannel channel configured, go ask pythagoras")
     
     await channel.send(embed=embed)
+    await ctx.send("✅️ Pannel created.")
 
 def setup(bot):
     bot.add_command(createpanel)
