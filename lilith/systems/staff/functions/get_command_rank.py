@@ -3,7 +3,7 @@ import mycord
 from .get_ranks import get_ranks
 
 
-db = mycord.PunksDB()
+db = mycord.DB()
 
 
 def get_command_rank(guild, command_name):
