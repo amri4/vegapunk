@@ -7,7 +7,7 @@ from ..functions.get_ranks import get_ranks
 from ..functions.arrange_roles import arrange_roles
 
 
-db = mycord.PunksDB()
+db = mycord.DB()
 
 
 @commands.command(
