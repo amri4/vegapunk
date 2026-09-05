@@ -23,11 +23,16 @@ async def createpanel(ctx):
     message = await get_message(ctx)
     description = message.content
 
+    await ctx.send("Add image")
+    message = await get_message(ctx)
+    image_url = message.attachments[0].url
+
     embed = discord.Embed(
         title=f"{title}",
         description=f"{description}",
         color=discord.Color.blue()
     )
+    embed.set_image(url=image_url)
     await ctx.send(embed=embed)
 
 def setup(bot):
