@@ -6,7 +6,7 @@ import mycord
 from ..functions.get_config import get_config
 
 
-db = mycord.PunksDB()
+db = mycord.DB()
 
 
 @commands.command(
