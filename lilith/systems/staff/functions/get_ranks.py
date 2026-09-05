@@ -1,7 +1,7 @@
 import mycord
 
 
-db = mycord.PunksDB()
+db = mycord.DB()
 
 
 def get_ranks(guild):
