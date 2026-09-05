@@ -2,8 +2,6 @@ import mycord
 
 db = mycord.PunksDB()
 
-db.drop_table("server_config")
-
 db.create_table(
     "server_config",
     """
