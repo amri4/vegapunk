@@ -25,7 +25,10 @@ async def createpanel(ctx):
 
     await ctx.send("Add image")
     message = await get_message(ctx)
-    image_url = message.attachments[0].url
+    if message.content.lower() == "skip":
+        image_url = None
+    else:
+        image_url = message.attachments[0].url
 
     embed = discord.Embed(
         title=f"{title}",
