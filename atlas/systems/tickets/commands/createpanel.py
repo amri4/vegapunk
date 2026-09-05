@@ -7,7 +7,7 @@ from ..functions.get_message import get_message
 
 import mycord
 
-db = mycord.PunksDB()
+db = mycord.DB()
 
 @commands.command(
     name="createpanel",
