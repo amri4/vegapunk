@@ -5,7 +5,7 @@ import mycord
 from ..functions.find_rank import find_rank
 
 
-db = mycord.PunksDB()
+db = mycord.DB()
 
 
 @commands.command(
