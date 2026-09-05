@@ -3,7 +3,7 @@ from discord.ext import commands
 
 import mycord
 
-db = mycord.PunksDB()
+db = mycord.DB()
 
 @commands.command(
     name="delpanel",
