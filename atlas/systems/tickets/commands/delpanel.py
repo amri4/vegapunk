@@ -18,7 +18,7 @@ async def delpanel(ctx, pan: int):
     config = db.fetchone(
         "server_config",
         "guild_id = ?",
-        (guild.id,)
+        (ctx.guild.id,)
     )
     channel = config[4]
     message_id = panel[2]
