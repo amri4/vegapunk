@@ -30,12 +30,21 @@ async def createpanel(ctx):
     else:
         image_url = message.attachments[0].url
 
+    await ctx.send("Add thumbnail or type `skip` to skip")
+    message = await get_message(ctx)
+    if message.content.lower() == "skip":
+        thumbnail_url = None
+    else:
+        thumbnail_url = message.attachments[0].url
+
     embed = discord.Embed(
         title=f"{title}",
         description=f"{description}",
         color=discord.Color.blue()
     )
     embed.set_image(url=image_url)
+    embed.set_thumbnail(url=thumbnail_url)
+    
     await ctx.send(embed=embed)
 
 def setup(bot):
