@@ -58,7 +58,7 @@ async def createpanel(ctx):
     )
     channel_id = config[4]
     channel = ctx.guild.get_channel(channel_id)
-    if channel is None:
+    if channel_id is None:
         await ctx.send("There is no ticket pannel channel configured, go ask pythagoras")
     
     await channel.send(embed=embed)
