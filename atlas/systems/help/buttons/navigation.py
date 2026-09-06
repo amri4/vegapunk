@@ -4,7 +4,6 @@ import discord
 class PreviousButton(discord.ui.Button):
 
     def __init__(self, help_view):
-
         self.help_view = help_view
 
         super().__init__(
@@ -12,8 +11,17 @@ class PreviousButton(discord.ui.Button):
             style=discord.ButtonStyle.secondary
         )
 
-    async def callback(self, interaction):
+        self.update_state()
 
+    def update_state(self):
+        view = self.help_view
+
+        self.disabled = (
+            not view.category_names
+            or view.page <= 0
+        )
+
+    async def callback(self, interaction):
         view = self.help_view
 
         if interaction.user.id != view.author.id:
@@ -27,10 +35,10 @@ class PreviousButton(discord.ui.Button):
             await interaction.response.defer()
             return
 
-        view.page -= 1
+        if view.page > 0:
+            view.page -= 1
 
-        if view.page < 0:
-            view.page = len(view.category_names) - 1
+        view.update_buttons()
 
         await interaction.response.edit_message(
             embed=await view.embed(),
@@ -41,7 +49,6 @@ class PreviousButton(discord.ui.Button):
 class NextButton(discord.ui.Button):
 
     def __init__(self, help_view):
-
         self.help_view = help_view
 
         super().__init__(
@@ -49,8 +56,17 @@ class NextButton(discord.ui.Button):
             style=discord.ButtonStyle.secondary
         )
 
-    async def callback(self, interaction):
+        self.update_state()
 
+    def update_state(self):
+        view = self.help_view
+
+        self.disabled = (
+            not view.category_names
+            or view.page >= len(view.category_names) - 1
+        )
+
+    async def callback(self, interaction):
         view = self.help_view
 
         if interaction.user.id != view.author.id:
@@ -64,12 +80,12 @@ class NextButton(discord.ui.Button):
             await interaction.response.defer()
             return
 
-        view.page += 1
+        if view.page < len(view.category_names) - 1:
+            view.page += 1
 
-        if view.page >= len(view.category_names):
-            view.page = 0
+        view.update_buttons()
 
         await interaction.response.edit_message(
-            embed=view.embed(),
+            embed=await view.embed(),
             view=view
         )
