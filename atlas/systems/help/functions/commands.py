@@ -23,7 +23,11 @@ def get_slash_commands(bot):
     categories = {}
 
     for command in bot.tree.get_commands():
-
+        
+        print("NAME:", command.name)
+        print("CALLBACK:", command.callback)
+        print("FILE:", getattr(command.callback, "__code__", None).co_filename)
+    
         if isinstance(command, app_commands.Group):
             continue
 
