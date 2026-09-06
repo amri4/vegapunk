@@ -1,6 +1,14 @@
 import discord
 
 
+def get_command_mention(bot, command):
+    for synced_command in bot.tree.get_commands():
+        if synced_command.qualified_name == command.qualified_name:
+            return f"</{synced_command.qualified_name}:{synced_command.id}>"
+
+    return f"`/{command.qualified_name}`"
+
+
 def build_help_embed(bot, categories, category_names, page):
     embed = discord.Embed(
         title="📖 Atlas Help",
@@ -21,7 +29,7 @@ def build_help_embed(bot, categories, category_names, page):
     lines = []
 
     for command in command_list:
-        name = f"`/{command.qualified_name}`"
+        name = get_command_mention(bot, command)
         description = command.description or "No description provided."
 
         lines.append(
