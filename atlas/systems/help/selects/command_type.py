@@ -4,7 +4,6 @@ import discord
 class CommandTypeSelect(discord.ui.Select):
 
     def __init__(self, help_view):
-
         self.help_view = help_view
 
         super().__init__(
@@ -26,10 +25,6 @@ class CommandTypeSelect(discord.ui.Select):
         )
 
     async def callback(self, interaction):
-
-        print("HELP SELECT CLICKED")
-        print("Selected:", self.values[0])
-
         view = self.help_view
 
         if interaction.user.id != view.author.id:
@@ -41,10 +36,9 @@ class CommandTypeSelect(discord.ui.Select):
 
         view.mode = self.values[0]
         view.page = 0
-
         view.refresh()
 
         await interaction.response.edit_message(
-            embed=view.embed(),
+            embed=await view.embed(),
             view=view
         )
