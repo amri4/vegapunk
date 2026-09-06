@@ -1,28 +1,46 @@
 import discord
 
 
-async def get_command_mention(bot, command):
+async def get_command_mentions(bot):
     commands = await bot.tree.fetch_commands()
 
-    for discord_command in commands:
-        if discord_command.name == command.name:
-            return discord_command.mention
+    return {
+        command.qualified_name: command.mention
+        for command in commands
+    }
 
-    return f"`/{command.qualified_name}`"
 
+async def build_help_embed(
+    bot,
+    categories,
+    category_names,
+    page,
+    mode
+):
+    bot_name = getattr(bot, "bot_name", "Bot")
 
-async def build_help_embed(bot, categories, category_names, page):
+    if mode == "prefix":
+        description = "💬 **Prefix Commands**"
+    else:
+        description = "⚡ **Slash Commands**"
+
     embed = discord.Embed(
-        title=f"📖 {bot.bot_name} Help",
-        description="⚡ **Slash Commands**"
+        title=f"📖 {bot_name} Help",
+        description=description
     )
 
     if not category_names:
+        command_type = (
+            "prefix" if mode == "prefix"
+            else "slash"
+        )
+
         embed.add_field(
             name="No Commands",
-            value="No slash commands were found.",
+            value=f"No {command_type} commands were found.",
             inline=False
         )
+
         return embed
 
     category = category_names[page]
@@ -30,13 +48,50 @@ async def build_help_embed(bot, categories, category_names, page):
 
     lines = []
 
-    for command in command_list:
-        name = await get_command_mention(bot, command)
-        description = command.description or "No description provided."
+    if mode == "slash":
+        mentions = await get_command_mentions(bot)
 
-        lines.append(
-            f"**{name}**\n{description}"
-        )
+        for command in command_list:
+            name = mentions.get(
+                command.qualified_name,
+                f"`/{command.qualified_name}`"
+            )
+
+            description = (
+                command.description
+                or "No description provided."
+            )
+
+            lines.append(
+                f"**{name}**\n{description}"
+            )
+
+    else:
+        prefix = bot.command_prefix
+
+        if callable(prefix):
+            prefix = ""
+
+        if isinstance(prefix, (list, tuple)):
+            prefix = prefix[0] if prefix else ""
+
+        for command in command_list:
+            if command.usage:
+                usage = command.usage
+
+                if not usage.startswith(command.name):
+                    usage = f"{command.name} {usage}"
+            else:
+                usage = command.name
+
+            description = (
+                command.description
+                or "No description provided."
+            )
+
+            lines.append(
+                f"**`{prefix}{usage}`**\n{description}"
+            )
 
     embed.add_field(
         name=f"📂 {category}",
