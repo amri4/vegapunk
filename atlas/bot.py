@@ -15,8 +15,6 @@ class Bot(commands.Bot):
             help_command=help_command
         )
 
-    async def setup_hook(self):
-        await self.tree.sync()
 
     async def on_ready(self):
         print(f"[{self.bot_name}] Logged in as {self.user}")
