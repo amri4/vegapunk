@@ -27,6 +27,9 @@ class CommandTypeSelect(discord.ui.Select):
 
     async def callback(self, interaction):
 
+        print("HELP SELECT CLICKED")
+        print("Selected:", self.values[0])
+
         view = self.help_view
 
         if interaction.user.id != view.author.id:
