@@ -34,5 +34,6 @@ def get_slash_commands(bot):
 
         categories.setdefault(category, [])
         categories[category].append(command)
+    print("SLASH COMMANDS:", bot.tree.get_commands())
 
     return dict(sorted(categories.items()))
