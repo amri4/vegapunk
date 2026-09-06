@@ -15,7 +15,10 @@ class Bot(commands.Bot):
             application_id=int(os.getenv("ATLAS_APPLICATION_ID"))
         )
 
-    async def on_ready(self):
+    async def on_ready():
+        synced = await self.tree.sync()
+
+        print(f"[{self.bot_name}] Synced {len(synced)} slash commands")
         print(f"[{self.bot_name}] Logged in as {self.user}")
 
 
