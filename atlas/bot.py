@@ -15,7 +15,7 @@ class Bot(commands.Bot):
             application_id=int(os.getenv("ATLAS_APPLICATION_ID"))
         )
 
-    async def on_ready():
+    async def on_ready(self):
         print(f"[{self.bot_name}] Logged in as {self.user}")
 
 
