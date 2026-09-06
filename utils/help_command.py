@@ -3,53 +3,41 @@ from discord.ext import commands
 
 
 # =========================================================
-# DATABASE
-# =========================================================
-
-import mycord
-
-db = mycord.DB()
-
-
-# =========================================================
 # CATEGORY
 # =========================================================
 
 def get_category(command):
 
-    module = getattr(command, "module", "")
+    module = getattr(command, "module", None)
 
-    parts = module.split(".")
+    if module:
 
-    if "systems" in parts:
+        parts = module.split(".")
 
-        index = parts.index("systems")
+        if "systems" in parts:
 
-        if index + 1 < len(parts):
+            index = parts.index("systems")
 
-            return parts[index + 1].replace(
-                "_", " "
-            ).title()
+            if index + 1 < len(parts):
+                return parts[index + 1].replace(
+                    "_", " "
+                ).title()
 
     return "General"
 
 
 # =========================================================
-# SLASH COMMANDS
+# SLASH COMMAND NAME
 # =========================================================
 
-def get_slash_commands(bot):
+def get_slash_name(command):
 
-    commands_list = []
+    command_id = getattr(command, "id", None)
 
-    for command in bot.tree.get_commands():
+    if command_id:
+        return f"</{command.qualified_name}:{command_id}>"
 
-        if command.name == "help":
-            continue
-
-        commands_list.append(command)
-
-    return commands_list
+    return f"/{command.qualified_name}"
 
 
 # =========================================================
@@ -65,7 +53,6 @@ class HelpView(discord.ui.View):
         categories,
         prefix
     ):
-
         super().__init__(timeout=180)
 
         self.bot = bot
@@ -73,16 +60,12 @@ class HelpView(discord.ui.View):
         self.categories = categories
         self.prefix = prefix
 
-        self.category = list(
-            categories.keys()
-        )[0]
-
+        self.category = list(categories.keys())[0]
         self.page = 0
         self.per_page = 6
 
-        self.add_item(
-            CategorySelect(self)
-        )
+        self.select = CategorySelect(self)
+        self.add_item(self.select)
 
         self.update_buttons()
 
@@ -115,28 +98,7 @@ class HelpView(discord.ui.View):
         ]
 
     # -----------------------------------------------------
-    # SLASH MENTION
-    # -----------------------------------------------------
-
-    def get_slash_name(self, command):
-
-        command_id = getattr(
-            command,
-            "id",
-            None
-        )
-
-        if command_id:
-
-            return (
-                f"</{command.qualified_name}:"
-                f"{command_id}>"
-            )
-
-        return f"/{command.qualified_name}"
-
-    # -----------------------------------------------------
-    # COMMAND DISPLAY
+    # COMMAND NAME
     # -----------------------------------------------------
 
     def get_command_name(self, command):
@@ -146,16 +108,15 @@ class HelpView(discord.ui.View):
             command,
             discord.app_commands.Command
         ):
+            return get_slash_name(command)
 
-            return self.get_slash_name(
-                command
-            )
+        # Prefix command
+        prefix_name = (
+            f"`{self.prefix}"
+            f"{command.qualified_name}`"
+        )
 
-        # Prefix / hybrid command
-        prefix = self.prefix
-
-        name = f"`{prefix}{command.qualified_name}`"
-
+        # Hybrid command
         app_command = getattr(
             command,
             "app_command",
@@ -164,13 +125,16 @@ class HelpView(discord.ui.View):
 
         if app_command:
 
-            slash = self.get_slash_name(
+            slash_name = get_slash_name(
                 app_command
             )
 
-            return f"{name} • {slash}"
+            return (
+                f"{prefix_name} • "
+                f"{slash_name}"
+            )
 
-        return name
+        return prefix_name
 
     # -----------------------------------------------------
     # EMBED
@@ -187,17 +151,14 @@ class HelpView(discord.ui.View):
 
         embed.description = (
             f"**Category:** {self.category}\n"
-            "Choose a category from the menu below."
+            "Select a category below."
         )
 
         if not pages:
 
             embed.add_field(
                 name="No Commands",
-                value=(
-                    "There are no commands "
-                    "in this category."
-                ),
+                value="No commands in this category.",
                 inline=False
             )
 
@@ -220,7 +181,6 @@ class HelpView(discord.ui.View):
                 )
 
             if not description:
-
                 description = "No description."
 
             embed.add_field(
@@ -241,7 +201,7 @@ class HelpView(discord.ui.View):
         return embed
 
     # -----------------------------------------------------
-    # BUTTON STATE
+    # BUTTONS
     # -----------------------------------------------------
 
     def update_buttons(self):
@@ -328,9 +288,7 @@ class HelpView(discord.ui.View):
 # CATEGORY SELECT
 # =========================================================
 
-class CategorySelect(
-    discord.ui.Select
-):
+class CategorySelect(discord.ui.Select):
 
     def __init__(self, help_view):
 
@@ -366,10 +324,6 @@ class CategorySelect(
 
         self.help_view.update_buttons()
 
-        self.help_view.category_select = CategorySelect(
-            self.help_view
-        )
-
         await interaction.response.edit_message(
             embed=self.help_view.get_embed(),
             view=self.help_view
@@ -380,17 +334,7 @@ class CategorySelect(
 # HELP COMMAND
 # =========================================================
 
-class BotHelpCommand(
-    commands.HelpCommand
-):
-
-    # -----------------------------------------------------
-    # CATEGORY
-    # -----------------------------------------------------
-
-    def get_command_category(self, command):
-
-        return get_category(command)
+class BotHelpCommand(commands.HelpCommand):
 
     # -----------------------------------------------------
     # COLLECT COMMANDS
@@ -401,7 +345,7 @@ class BotHelpCommand(
         categories = {}
 
         # =================================================
-        # PREFIX / HYBRID COMMANDS
+        # PREFIX + HYBRID COMMANDS
         # =================================================
 
         for command in self.bot.commands:
@@ -409,9 +353,7 @@ class BotHelpCommand(
             if command.hidden:
                 continue
 
-            category = self.get_command_category(
-                command
-            )
+            category = get_category(command)
 
             categories.setdefault(
                 category,
@@ -423,16 +365,15 @@ class BotHelpCommand(
             )
 
         # =================================================
-        # SLASH-ONLY COMMANDS
+        # SLASH COMMANDS
         # =================================================
 
-        slash_commands = get_slash_commands(
-            self.bot
-        )
+        for command in self.bot.tree.get_commands():
 
-        for command in slash_commands:
+            if command.name == "help":
+                continue
 
-            # Don't duplicate hybrid commands
+            # Check whether it's already a hybrid command
             duplicate = False
 
             for prefix_command in self.bot.commands:
@@ -446,17 +387,17 @@ class BotHelpCommand(
                 if not app_command:
                     continue
 
-                if app_command.name == command.name:
-
+                if (
+                    app_command.name
+                    == command.name
+                ):
                     duplicate = True
                     break
 
             if duplicate:
                 continue
 
-            category = get_category(
-                command
-            )
+            category = get_category(command)
 
             categories.setdefault(
                 category,
@@ -498,6 +439,10 @@ class BotHelpCommand(
 
         prefix = self.get_prefix()
 
+        if isinstance(prefix, (list, tuple)):
+
+            prefix = prefix[0]
+
         view = HelpView(
             self.bot,
             self.context.author.id,
@@ -523,13 +468,20 @@ class BotHelpCommand(
 
         description = (
             command.help
-            or command.description
+            or getattr(
+                command,
+                "description",
+                None
+            )
             or "No description."
         )
 
         embed.description = description
 
         prefix = self.get_prefix()
+
+        if isinstance(prefix, (list, tuple)):
+            prefix = prefix[0]
 
         embed.add_field(
             name="Prefix",
@@ -548,29 +500,11 @@ class BotHelpCommand(
 
         if app_command:
 
-            command_id = getattr(
-                app_command,
-                "id",
-                None
-            )
-
-            if command_id:
-
-                slash = (
-                    f"</{app_command.qualified_name}:"
-                    f"{command_id}>"
-                )
-
-            else:
-
-                slash = (
-                    f"/"
-                    f"{app_command.qualified_name}"
-                )
-
             embed.add_field(
                 name="Slash",
-                value=slash,
+                value=get_slash_name(
+                    app_command
+                ),
                 inline=False
             )
 
