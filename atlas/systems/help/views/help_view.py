@@ -27,6 +27,11 @@ class HelpView(discord.ui.View):
         if self.page >= len(self.category_names):
             self.page = max(0, len(self.category_names) - 1)
 
+    def update_buttons(self):
+        for item in self.children:
+            if hasattr(item, "update_state"):
+                item.update_state()
+
     async def embed(self):
         return await build_help_embed(
             self.bot,
