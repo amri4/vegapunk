@@ -2,7 +2,6 @@ import discord
 
 
 class CommandTypeSelect(discord.ui.Select):
-
     def __init__(self, help_view):
         self.help_view = help_view
 
@@ -36,6 +35,7 @@ class CommandTypeSelect(discord.ui.Select):
 
         view.mode = self.values[0]
         view.page = 0
+
         view.refresh()
 
         await interaction.response.edit_message(
