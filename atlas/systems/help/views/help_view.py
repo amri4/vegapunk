@@ -30,7 +30,6 @@ class HelpView(discord.ui.View):
     def embed(self):
         return build_help_embed(
             self.bot,
-            "slash",
             self.categories,
             self.category_names,
             self.page
