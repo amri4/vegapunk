@@ -33,7 +33,7 @@ class PreviousButton(discord.ui.Button):
             view.page = len(view.category_names) - 1
 
         await interaction.response.edit_message(
-            embed=view.embed(),
+            embed=await view.embed(),
             view=view
         )
 
