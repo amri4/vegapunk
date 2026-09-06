@@ -1,9 +1,18 @@
 import discord
-from discord import app_commands
+from discord.ext import commands
 
 
 # =========================================================
-# COMMAND CATEGORIES
+# DATABASE
+# =========================================================
+
+import mycord
+
+db = mycord.DB()
+
+
+# =========================================================
+# CATEGORY
 # =========================================================
 
 def get_category(command):
@@ -17,6 +26,7 @@ def get_category(command):
         index = parts.index("systems")
 
         if index + 1 < len(parts):
+
             return parts[index + 1].replace(
                 "_", " "
             ).title()
@@ -25,21 +35,21 @@ def get_category(command):
 
 
 # =========================================================
-# GET COMMANDS
+# SLASH COMMANDS
 # =========================================================
 
-def get_commands(bot):
+def get_slash_commands(bot):
 
-    commands = []
+    commands_list = []
 
     for command in bot.tree.get_commands():
 
         if command.name == "help":
             continue
 
-        commands.append(command)
+        commands_list.append(command)
 
-    return commands
+    return commands_list
 
 
 # =========================================================
@@ -52,24 +62,27 @@ class HelpView(discord.ui.View):
         self,
         bot,
         user_id,
-        categories
+        categories,
+        prefix
     ):
+
         super().__init__(timeout=180)
 
         self.bot = bot
         self.user_id = user_id
         self.categories = categories
+        self.prefix = prefix
 
-        self.category = list(categories.keys())[0]
+        self.category = list(
+            categories.keys()
+        )[0]
+
         self.page = 0
-
         self.per_page = 6
 
-        self.category_select = CategorySelect(
-            self
+        self.add_item(
+            CategorySelect(self)
         )
-
-        self.add_item(self.category_select)
 
         self.update_buttons()
 
@@ -90,16 +103,74 @@ class HelpView(discord.ui.View):
 
     def get_pages(self):
 
-        commands = self.current_commands()
+        commands_list = self.current_commands()
 
         return [
-            commands[i:i + self.per_page]
+            commands_list[i:i + self.per_page]
             for i in range(
                 0,
-                len(commands),
+                len(commands_list),
                 self.per_page
             )
         ]
+
+    # -----------------------------------------------------
+    # SLASH MENTION
+    # -----------------------------------------------------
+
+    def get_slash_name(self, command):
+
+        command_id = getattr(
+            command,
+            "id",
+            None
+        )
+
+        if command_id:
+
+            return (
+                f"</{command.qualified_name}:"
+                f"{command_id}>"
+            )
+
+        return f"/{command.qualified_name}"
+
+    # -----------------------------------------------------
+    # COMMAND DISPLAY
+    # -----------------------------------------------------
+
+    def get_command_name(self, command):
+
+        # Slash-only command
+        if isinstance(
+            command,
+            discord.app_commands.Command
+        ):
+
+            return self.get_slash_name(
+                command
+            )
+
+        # Prefix / hybrid command
+        prefix = self.prefix
+
+        name = f"`{prefix}{command.qualified_name}`"
+
+        app_command = getattr(
+            command,
+            "app_command",
+            None
+        )
+
+        if app_command:
+
+            slash = self.get_slash_name(
+                app_command
+            )
+
+            return f"{name} • {slash}"
+
+        return name
 
     # -----------------------------------------------------
     # EMBED
@@ -116,14 +187,17 @@ class HelpView(discord.ui.View):
 
         embed.description = (
             f"**Category:** {self.category}\n"
-            "Select a category below."
+            "Choose a category from the menu below."
         )
 
         if not pages:
 
             embed.add_field(
                 name="No Commands",
-                value="There are no commands in this category.",
+                value=(
+                    "There are no commands "
+                    "in this category."
+                ),
                 inline=False
             )
 
@@ -131,22 +205,43 @@ class HelpView(discord.ui.View):
 
         for command in pages[self.page]:
 
+            description = getattr(
+                command,
+                "help",
+                None
+            )
+
+            if not description:
+
+                description = getattr(
+                    command,
+                    "description",
+                    None
+                )
+
+            if not description:
+
+                description = "No description."
+
             embed.add_field(
-                name=f"/{command.qualified_name}",
-                value=command.description or "No description.",
+                name=self.get_command_name(
+                    command
+                ),
+                value=description,
                 inline=False
             )
 
         embed.set_footer(
             text=(
-                f"Page {self.page + 1}/{len(pages)}"
+                f"Page {self.page + 1}/"
+                f"{len(pages)}"
             )
         )
 
         return embed
 
     # -----------------------------------------------------
-    # BUTTONS
+    # BUTTON STATE
     # -----------------------------------------------------
 
     def update_buttons(self):
@@ -158,8 +253,8 @@ class HelpView(discord.ui.View):
         )
 
         self.next.disabled = (
-            not pages or
-            self.page >= len(pages) - 1
+            not pages
+            or self.page >= len(pages) - 1
         )
 
     # -----------------------------------------------------
@@ -237,18 +332,22 @@ class CategorySelect(
     discord.ui.Select
 ):
 
-    def __init__(self, view):
+    def __init__(self, help_view):
 
-        self.help_view = view
+        self.help_view = help_view
 
         options = []
 
-        for category in view.categories:
+        for category in help_view.categories:
 
             options.append(
                 discord.SelectOption(
                     label=category,
-                    value=category
+                    value=category,
+                    default=(
+                        category
+                        == help_view.category
+                    )
                 )
             )
 
@@ -267,6 +366,10 @@ class CategorySelect(
 
         self.help_view.update_buttons()
 
+        self.help_view.category_select = CategorySelect(
+            self.help_view
+        )
+
         await interaction.response.edit_message(
             embed=self.help_view.get_embed(),
             view=self.help_view
@@ -277,67 +380,207 @@ class CategorySelect(
 # HELP COMMAND
 # =========================================================
 
-@app_commands.command(
-    name="help",
-    description="Show all available commands"
-)
-async def help_command(
-    interaction: discord.Interaction
+class BotHelpCommand(
+    commands.HelpCommand
 ):
 
-    bot = interaction.client
+    # -----------------------------------------------------
+    # CATEGORY
+    # -----------------------------------------------------
 
-    all_commands = get_commands(bot)
+    def get_command_category(self, command):
 
-    categories = {}
+        return get_category(command)
 
-    for command in all_commands:
+    # -----------------------------------------------------
+    # COLLECT COMMANDS
+    # -----------------------------------------------------
 
-        category = get_category(command)
+    def collect_commands(self):
 
-        categories.setdefault(
-            category,
-            []
+        categories = {}
+
+        # =================================================
+        # PREFIX / HYBRID COMMANDS
+        # =================================================
+
+        for command in self.bot.commands:
+
+            if command.hidden:
+                continue
+
+            category = self.get_command_category(
+                command
+            )
+
+            categories.setdefault(
+                category,
+                []
+            )
+
+            categories[category].append(
+                command
+            )
+
+        # =================================================
+        # SLASH-ONLY COMMANDS
+        # =================================================
+
+        slash_commands = get_slash_commands(
+            self.bot
         )
 
-        categories[category].append(
-            command
+        for command in slash_commands:
+
+            # Don't duplicate hybrid commands
+            duplicate = False
+
+            for prefix_command in self.bot.commands:
+
+                app_command = getattr(
+                    prefix_command,
+                    "app_command",
+                    None
+                )
+
+                if not app_command:
+                    continue
+
+                if app_command.name == command.name:
+
+                    duplicate = True
+                    break
+
+            if duplicate:
+                continue
+
+            category = get_category(
+                command
+            )
+
+            categories.setdefault(
+                category,
+                []
+            )
+
+            categories[category].append(
+                command
+            )
+
+        # =================================================
+        # SORT
+        # =================================================
+
+        for category in categories:
+
+            categories[category].sort(
+                key=lambda command:
+                command.qualified_name
+            )
+
+        return categories
+
+    # -----------------------------------------------------
+    # BOT HELP
+    # -----------------------------------------------------
+
+    async def send_bot_help(self, mapping):
+
+        categories = self.collect_commands()
+
+        if not categories:
+
+            await self.get_destination().send(
+                "There are no commands available."
+            )
+
+            return
+
+        prefix = self.get_prefix()
+
+        view = HelpView(
+            self.bot,
+            self.context.author.id,
+            categories,
+            prefix
         )
 
-    for category in categories:
-
-        categories[category].sort(
-            key=lambda command:
-            command.qualified_name
+        await self.get_destination().send(
+            embed=view.get_embed(),
+            view=view
         )
 
-    if not categories:
+    # -----------------------------------------------------
+    # COMMAND HELP
+    # -----------------------------------------------------
 
-        await interaction.response.send_message(
-            "There are no commands available.",
-            ephemeral=True
+    async def send_command_help(self, command):
+
+        embed = discord.Embed(
+            title=command.qualified_name,
+            color=discord.Color.blurple()
         )
 
-        return
+        description = (
+            command.help
+            or command.description
+            or "No description."
+        )
 
-    view = HelpView(
-        bot,
-        interaction.user.id,
-        categories
-    )
+        embed.description = description
 
-    await interaction.response.send_message(
-        embed=view.get_embed(),
-        view=view
-    )
+        prefix = self.get_prefix()
+
+        embed.add_field(
+            name="Prefix",
+            value=(
+                f"`{prefix}"
+                f"{command.qualified_name}`"
+            ),
+            inline=False
+        )
+
+        app_command = getattr(
+            command,
+            "app_command",
+            None
+        )
+
+        if app_command:
+
+            command_id = getattr(
+                app_command,
+                "id",
+                None
+            )
+
+            if command_id:
+
+                slash = (
+                    f"</{app_command.qualified_name}:"
+                    f"{command_id}>"
+                )
+
+            else:
+
+                slash = (
+                    f"/"
+                    f"{app_command.qualified_name}"
+                )
+
+            embed.add_field(
+                name="Slash",
+                value=slash,
+                inline=False
+            )
+
+        await self.get_destination().send(
+            embed=embed
+        )
 
 
 # =========================================================
-# SETUP
+# EXPORT
 # =========================================================
 
-def setup(bot):
-
-    bot.tree.add_command(
-        help_command
-    )
+help_command = BotHelpCommand()
