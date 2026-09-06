@@ -1,3 +1,5 @@
+import traceback
+
 from discord import app_commands
 from ..views.help_view import HelpView
 
@@ -7,12 +9,24 @@ from ..views.help_view import HelpView
     description="Show Atlas slash commands."
 )
 async def help_command(interaction):
-    view = HelpView(interaction.client, interaction.user)
 
-    await interaction.response.send_message(
-        embed=view.embed(),
-        view=view
-    )
+    try:
+        view = HelpView(interaction.client, interaction.user)
+
+        await interaction.response.send_message(
+            embed=view.embed(),
+            view=view
+        )
+
+    except Exception as error:
+        print("[HELP ERROR]")
+        traceback.print_exc()
+
+        if not interaction.response.is_done():
+            await interaction.response.send_message(
+                f"Help command error: `{type(error).__name__}`",
+                ephemeral=True
+            )
 
 
 def setup(bot):
