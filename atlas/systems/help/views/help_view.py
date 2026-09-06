@@ -1,7 +1,11 @@
 import discord
 
-from ..functions.commands import get_slash_commands
+from ..functions.commands import (
+    get_prefix_commands,
+    get_slash_commands
+)
 from ..functions.embed import build_help_embed
+from ..selects.command_type import CommandTypeSelect
 from ..buttons.navigation import PreviousButton, NextButton
 
 
@@ -12,34 +16,43 @@ class HelpView(discord.ui.View):
 
         self.bot = bot
         self.author = author
+        self.mode = "slash"
         self.page = 0
 
-        self.categories = get_slash_commands(self.bot)
-        self.category_names = list(self.categories.keys())
+        self.categories = {}
+        self.category_names = []
 
+        self.add_item(CommandTypeSelect(self))
         self.add_item(PreviousButton(self))
         self.add_item(NextButton(self))
+
+        self.refresh()
+
+    def refresh(self):
+        if self.mode == "prefix":
+            self.categories = get_prefix_commands(self.bot)
+        else:
+            self.categories = get_slash_commands(self.bot)
+
+        self.category_names = list(self.categories.keys())
+
+        if self.page >= len(self.category_names):
+            self.page = max(0, len(self.category_names) - 1)
+
+        self.update_buttons()
 
     def update_buttons(self):
         for item in self.children:
             if hasattr(item, "update_state"):
                 item.update_state()
 
-    def refresh(self):
-        self.categories = get_slash_commands(self.bot)
-        self.category_names = list(self.categories.keys())
-
-        if self.page >= len(self.category_names):
-            self.page = max(0, len(self.category_names) - 1)
-        self.update_buttons()
-
-    
     async def embed(self):
         return await build_help_embed(
             self.bot,
             self.categories,
             self.category_names,
-            self.page
+            self.page,
+            self.mode
         )
 
     async def on_timeout(self):
