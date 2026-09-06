@@ -16,9 +16,6 @@ class Bot(commands.Bot):
         )
 
     async def on_ready():
-        synced = await self.tree.sync()
-
-        print(f"[{self.bot_name}] Synced {len(synced)} slash commands")
         print(f"[{self.bot_name}] Logged in as {self.user}")
 
 
