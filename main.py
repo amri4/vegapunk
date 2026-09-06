@@ -3,22 +3,24 @@ import importlib
 import os
 from pathlib import Path
 
-import mycord
 from dotenv import load_dotenv
+
 
 load_dotenv()
 
 ROOT = Path(__file__).parent
 
 
-# =========================================
+# =========================================================
 # FIND BOTS
-# =========================================
+# =========================================================
 
 def find_bots():
+
     bots = []
 
     for folder in ROOT.iterdir():
+
         if not folder.is_dir():
             continue
 
@@ -28,32 +30,38 @@ def find_bots():
             continue
 
         try:
-            module = importlib.import_module(f"{folder.name}.bot")
+
+            module = importlib.import_module(
+                f"{folder.name}.bot"
+            )
+
             bot = module.bot
 
-            bots.append((folder, bot))
+            bots.append(
+                (folder, bot)
+            )
 
         except Exception as error:
+
             print(
-                f"[ERROR] Failed to load "
-                f"{folder.name}: {error}"
+                f"[ERROR] Failed to load {folder.name}: {error}"
             )
 
     return bots
 
 
-# =========================================
-# LOAD FILES
-# =========================================
+# =========================================================
+# LOAD SYSTEMS
+# =========================================================
 
-async def load_folder(bot_folder, bot, folder_name):
+async def load_systems(bot_folder, bot):
 
-    folder = bot_folder / folder_name
+    systems = bot_folder / "systems"
 
-    if not folder.exists():
+    if not systems.exists():
         return
 
-    for file in folder.rglob("*.py"):
+    for file in systems.rglob("*.py"):
 
         if file.name == "__init__.py":
             continue
@@ -65,9 +73,16 @@ async def load_folder(bot_folder, bot, folder_name):
         )
 
         try:
-            module = importlib.import_module(module_name)
 
-            setup = getattr(module, "setup", None)
+            module = importlib.import_module(
+                module_name
+            )
+
+            setup = getattr(
+                module,
+                "setup",
+                None
+            )
 
             if setup is None:
                 continue
@@ -78,59 +93,19 @@ async def load_folder(bot_folder, bot, folder_name):
                 await result
 
             print(
-                f"[LOADED] {bot_folder.name} "
-                f"{folder_name}/{file.stem}"
+                f"[{bot_folder.name}] Loaded {module_name}"
             )
 
         except Exception as error:
+
             print(
-                f"[ERROR] Failed to load "
-                f"{module_name}: {error}"
+                f"[ERROR] Failed to load {module_name}: {error}"
             )
 
 
-# =========================================
-# LOAD SYSTEMS
-# =========================================
-
-async def load_systems(bot_folder, bot):
-
-    await load_folder(
-        bot_folder,
-        bot,
-        "systems"
-    )
-
-
-# =========================================
-# LOAD PREFIX COMMANDS
-# =========================================
-
-async def load_prefix_commands(bot_folder, bot):
-
-    await load_folder(
-        bot_folder,
-        bot,
-        "commands"
-    )
-
-
-# =========================================
-# LOAD SLASH COMMANDS
-# =========================================
-
-async def load_slash_commands(bot_folder, bot):
-
-    await load_folder(
-        bot_folder,
-        bot,
-        "slash_commands"
-    )
-
-
-# =========================================
+# =========================================================
 # RUN BOT
-# =========================================
+# =========================================================
 
 async def run_bot(bot_folder, bot):
 
@@ -139,69 +114,43 @@ async def run_bot(bot_folder, bot):
         bot
     )
 
-    await load_prefix_commands(
-        bot_folder,
-        bot
+    token_name = (
+        f"{bot_folder.name.upper()}_TOKEN"
     )
 
-    await load_slash_commands(
-        bot_folder,
-        bot
-    )
-
-    # Sync slash commands
-    try:
-        synced = await bot.tree.sync()
-
-        print(
-            f"[SLASH] {bot_folder.name}: "
-            f"{len(synced)} commands synced"
-        )
-
-    except Exception as error:
-        print(
-            f"[ERROR] Failed to sync slash commands "
-            f"for {bot_folder.name}: {error}"
-        )
-
-    tokens = {
-        "atlas": os.getenv("ATLAS_TOKEN"),
-        "lilith": os.getenv("LILITH_TOKEN"),
-        "shaka": os.getenv("SHAKA_TOKEN"),
-        "york": os.getenv("YORK_TOKEN"),
-        "pythagoras": os.getenv("PYTHAGORAS_TOKEN"),
-    }
-
-    token = tokens.get(
-        bot_folder.name.lower()
-    )
+    token = os.getenv(token_name)
 
     if not token:
+
         print(
-            f"[ERROR] No token found for "
-            f"{bot_folder.name}"
+            f"[ERROR] No token found for {bot_folder.name}"
         )
+
         return
 
     try:
+
         await bot.start(token)
 
     except Exception as error:
+
         print(
             f"[ERROR] {bot_folder.name}: {error}"
         )
 
 
-# =========================================
+# =========================================================
 # MAIN
-# =========================================
+# =========================================================
 
 async def main():
 
     bots = find_bots()
 
     if not bots:
+
         print("[ERROR] No bots found.")
+
         return
 
     await asyncio.gather(
