@@ -1,3 +1,4 @@
+import os
 import discord
 from discord.ext import commands
 from pathlib import Path
@@ -12,14 +13,23 @@ class Bot(commands.Bot):
         super().__init__(
             command_prefix="Atlas ",
             intents=discord.Intents.all(),
-            help_command=help_command
+            help_command=help_command,
+            application_id=int(os.getenv("ATLAS_APPLICATION_ID"))
         )
 
     async def on_ready(self):
 
-        if not hasattr(self, "_slash_synced"):
-            await self.tree.sync()
-            self._slash_synced = True
+        try:
+            synced = await self.tree.sync()
+
+            print(
+                f"[{self.bot_name}] Synced {len(synced)} slash commands"
+            )
+
+        except Exception as error:
+            print(
+                f"[{self.bot_name}] Failed to sync slash commands: {error}"
+            )
 
         print(f"[{self.bot_name}] Logged in as {self.user}")
 
