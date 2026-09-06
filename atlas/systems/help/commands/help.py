@@ -6,11 +6,11 @@ from pathlib import Path
 
 
 # =========================================================
-# HELP DATA
+# CATEGORY
 # =========================================================
 
 def get_category(callback):
-    """Get category from systems/<category>/commands/<file>.py"""
+    """Get the category from systems/<category>/commands/<file>.py"""
 
     try:
         file = Path(callback.__code__.co_filename)
@@ -28,11 +28,16 @@ def get_category(callback):
     return "Other"
 
 
+# =========================================================
+# PREFIX COMMANDS
+# =========================================================
+
 def get_prefix_commands(bot):
     categories = {}
 
     for command in bot.commands:
-        # Don't show this help command inside itself
+
+        # Don't show help inside help
         if command.name == "help":
             continue
 
@@ -43,17 +48,21 @@ def get_prefix_commands(bot):
 
     return dict(sorted(categories.items()))
 
+
+# =========================================================
+# SLASH COMMANDS
+# =========================================================
 
 def get_slash_commands(bot):
     categories = {}
 
     for command in bot.tree.get_commands():
 
-        # Ignore slash groups for now
+        # Ignore command groups
         if isinstance(command, app_commands.Group):
             continue
 
-        # Don't show this help command inside itself
+        # Don't show help inside help
         if command.name == "help":
             continue
 
@@ -63,6 +72,56 @@ def get_slash_commands(bot):
         categories[category].append(command)
 
     return dict(sorted(categories.items()))
+
+
+# =========================================================
+# COMMAND TYPE SELECT
+# =========================================================
+
+class CommandTypeSelect(discord.ui.Select):
+
+    def __init__(self, help_view):
+
+        self.help_view = help_view
+
+        super().__init__(
+            placeholder="Choose command type...",
+            options=[
+                discord.SelectOption(
+                    label="Prefix Commands",
+                    value="prefix",
+                    description="Show prefix commands",
+                    emoji="💬"
+                ),
+                discord.SelectOption(
+                    label="Slash Commands",
+                    value="slash",
+                    description="Show slash commands",
+                    emoji="⚡"
+                )
+            ]
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+
+        view = self.help_view
+
+        if interaction.user.id != view.author.id:
+            await interaction.response.send_message(
+                "This help menu belongs to someone else.",
+                ephemeral=True
+            )
+            return
+
+        view.mode = self.values[0]
+        view.page = 0
+
+        view.refresh_data()
+
+        await interaction.response.edit_message(
+            embed=view.make_embed(),
+            view=view
+        )
 
 
 # =========================================================
@@ -72,6 +131,7 @@ def get_slash_commands(bot):
 class HelpView(discord.ui.View):
 
     def __init__(self, bot, author):
+
         super().__init__(timeout=180)
 
         self.bot = bot
@@ -85,25 +145,32 @@ class HelpView(discord.ui.View):
 
         self.refresh_data()
 
-    # -----------------------------------------------------
-    # Refresh commands
-    # -----------------------------------------------------
+        # Select menu
+        self.add_item(CommandTypeSelect(self))
+
+    # =====================================================
+    # REFRESH DATA
+    # =====================================================
 
     def refresh_data(self):
 
         if self.mode == "prefix":
             self.categories = get_prefix_commands(self.bot)
+
         else:
             self.categories = get_slash_commands(self.bot)
 
         self.category_names = list(self.categories.keys())
 
         if self.page >= len(self.category_names):
-            self.page = max(0, len(self.category_names) - 1)
+            self.page = max(
+                0,
+                len(self.category_names) - 1
+            )
 
-    # -----------------------------------------------------
-    # Get prefix
-    # -----------------------------------------------------
+    # =====================================================
+    # PREFIX
+    # =====================================================
 
     def get_prefix(self):
 
@@ -117,9 +184,9 @@ class HelpView(discord.ui.View):
 
         return prefix
 
-    # -----------------------------------------------------
-    # Make embed
-    # -----------------------------------------------------
+    # =====================================================
+    # EMBED
+    # =====================================================
 
     def make_embed(self):
 
@@ -129,10 +196,13 @@ class HelpView(discord.ui.View):
 
         if self.mode == "prefix":
             embed.description = "💬 **Prefix Commands**"
+
         else:
             embed.description = "⚡ **Slash Commands**"
 
+        # No commands
         if not self.category_names:
+
             embed.add_field(
                 name="No commands",
                 value="No commands were found.",
@@ -141,57 +211,69 @@ class HelpView(discord.ui.View):
 
             return embed
 
+        # Current category
         category = self.category_names[self.page]
+
         command_list = self.categories[category]
 
         lines = []
 
         for command in command_list:
 
-            # =============================================
-            # PREFIX
-            # =============================================
+            # =================================================
+            # PREFIX COMMAND
+            # =================================================
 
             if self.mode == "prefix":
 
                 prefix = self.get_prefix()
 
-                usage = command.usage
+                if command.usage:
+                    usage = command.usage
 
-                if usage:
-                    usage_text = f"{prefix}{usage}"
+                    # If usage doesn't already start with
+                    # the command name, add it.
+                    if not usage.startswith(command.name):
+                        usage = f"{command.name} {usage}"
+
                 else:
-                    usage_text = f"{prefix}{command.name}"
+                    usage = command.name
 
-                description = command.description
+                usage = f"{prefix}{usage}"
 
-                if not description:
-                    description = "No description provided."
+                description = (
+                    command.description
+                    or "No description provided."
+                )
 
                 lines.append(
-                    f"**`{usage_text}`**\n"
+                    f"**`{usage}`**\n"
                     f"{description}"
                 )
 
-            # =============================================
-            # SLASH
-            # =============================================
+            # =================================================
+            # SLASH COMMAND
+            # =================================================
 
             else:
 
+                description = (
+                    command.description
+                    or "No description provided."
+                )
+
                 if command.id:
+
+                    # Clickable Discord slash command
                     command_name = (
                         f"</{command.qualified_name}:{command.id}>"
                     )
+
                 else:
+
                     command_name = (
                         f"`/{command.qualified_name}`"
                     )
-
-                description = command.description
-
-                if not description:
-                    description = "No description provided."
 
                 lines.append(
                     f"**{command_name}**\n"
@@ -212,50 +294,6 @@ class HelpView(discord.ui.View):
         )
 
         return embed
-
-    # =====================================================
-    # SELECT MENU
-    # =====================================================
-
-    @discord.ui.select(
-        placeholder="Choose command type...",
-        options=[
-            discord.SelectOption(
-                label="Prefix Commands",
-                value="prefix",
-                description="Show prefix commands",
-                emoji="💬"
-            ),
-            discord.SelectOption(
-                label="Slash Commands",
-                value="slash",
-                description="Show slash commands",
-                emoji="⚡"
-            )
-        ]
-    )
-    async def command_type(
-        self,
-        interaction: discord.Interaction,
-        select: discord.ui.Select
-    ):
-
-        if interaction.user.id != self.author.id:
-            await interaction.response.send_message(
-                "This help menu belongs to someone else.",
-                ephemeral=True
-            )
-            return
-
-        self.mode = select.values[0]
-        self.page = 0
-
-        self.refresh_data()
-
-        await interaction.response.edit_message(
-            embed=self.make_embed(),
-            view=self
-        )
 
     # =====================================================
     # PREVIOUS
@@ -338,7 +376,7 @@ class HelpView(discord.ui.View):
 
 
 # =========================================================
-# PREFIX COMMAND
+# PREFIX HELP
 # =========================================================
 
 @commands.command(
@@ -359,7 +397,7 @@ async def help_command(ctx):
 
 
 # =========================================================
-# SLASH COMMAND
+# SLASH HELP
 # =========================================================
 
 @app_commands.command(
@@ -386,4 +424,5 @@ async def slash_help(interaction: discord.Interaction):
 async def setup(bot):
 
     bot.add_command(help_command)
+
     bot.tree.add_command(slash_help)
