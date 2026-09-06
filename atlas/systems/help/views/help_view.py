@@ -27,8 +27,8 @@ class HelpView(discord.ui.View):
         if self.page >= len(self.category_names):
             self.page = max(0, len(self.category_names) - 1)
 
-    def embed(self):
-        return build_help_embed(
+    async def embed(self):
+        return await build_help_embed(
             self.bot,
             self.categories,
             self.category_names,
