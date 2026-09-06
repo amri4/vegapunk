@@ -14,7 +14,7 @@ async def help_command(interaction):
         view = HelpView(interaction.client, interaction.user)
 
         await interaction.response.send_message(
-            embed=view.embed(),
+            embed=await view.embed(),
             view=view
         )
 
