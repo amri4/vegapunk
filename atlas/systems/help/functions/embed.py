@@ -1,30 +1,18 @@
 import discord
 
 
-def build_help_embed(
-    bot,
-    mode,
-    categories,
-    category_names,
-    page
-):
-
+def build_help_embed(bot, categories, category_names, page):
     embed = discord.Embed(
-        title="📖 Atlas Help"
+        title="📖 Atlas Help",
+        description="⚡ **Slash Commands**"
     )
-
-    if mode == "prefix":
-        embed.description = "💬 **Prefix Commands**"
-    else:
-        embed.description = "⚡ **Slash Commands**"
 
     if not category_names:
         embed.add_field(
-            name="No commands",
-            value="No commands were found.",
+            name="No Commands",
+            value="No slash commands were found.",
             inline=False
         )
-
         return embed
 
     category = category_names[page]
@@ -33,54 +21,12 @@ def build_help_embed(
     lines = []
 
     for command in command_list:
+        name = f"`/{command.qualified_name}`"
+        description = command.description or "No description provided."
 
-        if mode == "prefix":
-
-            prefix = bot.command_prefix
-
-            if callable(prefix):
-                prefix = ""
-
-            if isinstance(prefix, (list, tuple)):
-                prefix = prefix[0] if prefix else ""
-
-            if command.usage:
-                usage = command.usage
-
-                if not usage.startswith(command.name):
-                    usage = f"{command.name} {usage}"
-
-            else:
-                usage = command.name
-
-            description = (
-                command.description
-                or "No description provided."
-            )
-
-            lines.append(
-                f"**`{prefix}{usage}`**\n"
-                f"{description}"
-            )
-
-        else:
-
-            description = (
-                command.description
-                or "No description provided."
-            )
-
-            if command.id:
-                name = (
-                    f"</{command.qualified_name}:{command.id}>"
-                )
-            else:
-                name = f"`/{command.qualified_name}`"
-
-            lines.append(
-                f"**{name}**\n"
-                f"{description}"
-            )
+        lines.append(
+            f"**{name}**\n{description}"
+        )
 
     embed.add_field(
         name=f"📂 {category}",
