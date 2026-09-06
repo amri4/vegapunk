@@ -13,7 +13,7 @@ async def get_command_mention(bot, command):
 
 async def build_help_embed(bot, categories, category_names, page):
     embed = discord.Embed(
-        title="📖 Atlas Help",
+        title=f"📖 {bot.bot_name} Help",
         description="⚡ **Slash Commands**"
     )
 
