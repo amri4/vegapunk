@@ -1,128 +1,223 @@
 import discord
-from discord.ext import commands
-
-import mycord
+from discord import app_commands
 
 
-db = mycord.DB()
+# =========================================================
+# COMMAND CATEGORIES
+# =========================================================
+
+def get_category(command):
+
+    module = getattr(command, "module", "")
+
+    parts = module.split(".")
+
+    if "systems" in parts:
+
+        index = parts.index("systems")
+
+        if index + 1 < len(parts):
+            return parts[index + 1].replace(
+                "_", " "
+            ).title()
+
+    return "General"
 
 
-# =========================================
-# STAFF RANK
-# =========================================
+# =========================================================
+# GET COMMANDS
+# =========================================================
 
-def get_command_rank(guild, command_name):
+def get_commands(bot):
 
-    if guild is None:
-        return None
+    commands = []
 
-    command_rank = db.fetchone(
-        "command_ranks",
-        "guild_id = ? AND command_name = ?",
-        (
-            guild.id,
-            command_name.lower()
-        )
-    )
+    for command in bot.tree.get_commands():
 
-    if command_rank is None:
-        return None
+        if command.name == "help":
+            continue
 
-    rank = db.fetchone(
-        "staff_ranks",
-        "guild_id = ? AND level = ?",
-        (
-            guild.id,
-            command_rank[2]
-        )
-    )
+        commands.append(command)
 
-    return rank
+    return commands
 
 
-# =========================================
+# =========================================================
 # HELP VIEW
-# =========================================
+# =========================================================
 
 class HelpView(discord.ui.View):
 
-    def __init__(self, pages, author, guild):
-        super().__init__(timeout=120)
+    def __init__(
+        self,
+        bot,
+        user_id,
+        categories
+    ):
+        super().__init__(timeout=180)
 
-        self.pages = pages
-        self.author = author
-        self.guild = guild
+        self.bot = bot
+        self.user_id = user_id
+        self.categories = categories
+
+        self.category = list(categories.keys())[0]
         self.page = 0
+
+        self.per_page = 6
+
+        self.category_select = CategorySelect(
+            self
+        )
+
+        self.add_item(self.category_select)
 
         self.update_buttons()
 
-    # =====================================
-    # BUTTON STATE
-    # =====================================
+    # -----------------------------------------------------
+    # CURRENT COMMANDS
+    # -----------------------------------------------------
 
-    def update_buttons(self):
+    def current_commands(self):
 
-        self.previous.disabled = self.page == 0
-
-        self.next.disabled = (
-            self.page == len(self.pages) - 1
+        return self.categories.get(
+            self.category,
+            []
         )
 
-        self.page_button.label = (
-            f"{self.page + 1} / {len(self.pages)}"
-        )
+    # -----------------------------------------------------
+    # PAGES
+    # -----------------------------------------------------
 
-    # =====================================
+    def get_pages(self):
+
+        commands = self.current_commands()
+
+        return [
+            commands[i:i + self.per_page]
+            for i in range(
+                0,
+                len(commands),
+                self.per_page
+            )
+        ]
+
+    # -----------------------------------------------------
     # EMBED
-    # =====================================
+    # -----------------------------------------------------
 
     def get_embed(self):
 
-        category, commands_list = self.pages[self.page]
+        pages = self.get_pages()
 
         embed = discord.Embed(
-            title="📖 Help",
-            description=f"**{category.title()}**"
+            title=f"{self.bot.bot_name} Help",
+            color=discord.Color.blurple()
         )
 
-        for command in commands_list:
+        embed.description = (
+            f"**Category:** {self.category}\n"
+            "Select a category below."
+        )
 
-            description = command.help or "No description."
-
-            rank = get_command_rank(
-                self.guild,
-                command.name
-            )
-
-            if rank:
-
-                description += (
-                    f"\n\n**Required rank:** "
-                    f"{rank[1]} or above"
-                )
-
-            else:
-
-                description += (
-                    "\n\n**Required rank:** "
-                    "Everyone"
-                )
+        if not pages:
 
             embed.add_field(
-                name=f"`{command.name}`",
-                value=description,
+                name="No Commands",
+                value="There are no commands in this category.",
                 inline=False
             )
 
+            return embed
+
+        for command in pages[self.page]:
+
+            embed.add_field(
+                name=f"/{command.qualified_name}",
+                value=command.description or "No description.",
+                inline=False
+            )
+
+        embed.set_footer(
+            text=(
+                f"Page {self.page + 1}/{len(pages)}"
+            )
+        )
+
         return embed
 
-    # =====================================
-    # ONLY COMMAND USER CAN USE BUTTONS
-    # =====================================
+    # -----------------------------------------------------
+    # BUTTONS
+    # -----------------------------------------------------
 
-    async def interaction_check(self, interaction):
+    def update_buttons(self):
 
-        if interaction.user != self.author:
+        pages = self.get_pages()
+
+        self.previous.disabled = (
+            self.page <= 0
+        )
+
+        self.next.disabled = (
+            not pages or
+            self.page >= len(pages) - 1
+        )
+
+    # -----------------------------------------------------
+    # PREVIOUS
+    # -----------------------------------------------------
+
+    @discord.ui.button(
+        label="Previous",
+        style=discord.ButtonStyle.secondary
+    )
+    async def previous(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+
+        self.page -= 1
+
+        self.update_buttons()
+
+        await interaction.response.edit_message(
+            embed=self.get_embed(),
+            view=self
+        )
+
+    # -----------------------------------------------------
+    # NEXT
+    # -----------------------------------------------------
+
+    @discord.ui.button(
+        label="Next",
+        style=discord.ButtonStyle.primary
+    )
+    async def next(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+
+        self.page += 1
+
+        self.update_buttons()
+
+        await interaction.response.edit_message(
+            embed=self.get_embed(),
+            view=self
+        )
+
+    # -----------------------------------------------------
+    # INTERACTION CHECK
+    # -----------------------------------------------------
+
+    async def interaction_check(
+        self,
+        interaction: discord.Interaction
+    ):
+
+        if interaction.user.id != self.user_id:
 
             await interaction.response.send_message(
                 "This help menu isn't yours.",
@@ -133,338 +228,116 @@ class HelpView(discord.ui.View):
 
         return True
 
-    # =====================================
-    # PREVIOUS
-    # =====================================
 
-    @discord.ui.button(
-        label="◀️",
-        style=discord.ButtonStyle.secondary
-    )
-    async def previous(self, interaction, button):
+# =========================================================
+# CATEGORY SELECT
+# =========================================================
 
-        await interaction.response.defer()
+class CategorySelect(
+    discord.ui.Select
+):
 
-        if self.page > 0:
-            self.page -= 1
+    def __init__(self, view):
 
-        self.update_buttons()
+        self.help_view = view
 
-        await interaction.edit_original_response(
-            embed=self.get_embed(),
-            view=self
-        )
+        options = []
 
-    # =====================================
-    # PAGE NUMBER
-    # =====================================
+        for category in view.categories:
 
-    @discord.ui.button(
-        label="1 / 1",
-        style=discord.ButtonStyle.secondary,
-        disabled=True
-    )
-    async def page_button(self, interaction, button):
-
-        pass
-
-    # =====================================
-    # NEXT
-    # =====================================
-
-    @discord.ui.button(
-        label="▶️",
-        style=discord.ButtonStyle.secondary
-    )
-    async def next(self, interaction, button):
-
-        await interaction.response.defer()
-
-        if self.page < len(self.pages) - 1:
-            self.page += 1
-
-        self.update_buttons()
-
-        await interaction.edit_original_response(
-            embed=self.get_embed(),
-            view=self
-        )
-
-
-# =========================================
-# HELP COMMAND
-# =========================================
-
-class BotHelpCommand(commands.HelpCommand):
-
-    # =====================================
-    # CATEGORY
-    # =====================================
-
-    def get_category(self, command):
-
-        module = command.callback.__module__
-
-        parts = module.split(".")
-
-        try:
-
-            systems_index = parts.index("systems")
-
-            return parts[
-                systems_index + 1
-            ]
-
-        except (
-            ValueError,
-            IndexError
-        ):
-
-            return "Other"
-
-    # =====================================
-    # SEND ALL HELP
-    # =====================================
-
-    async def send_bot_help(self, mapping):
-
-        bot = self.context.bot
-
-        categories = {}
-
-        for command in bot.commands:
-
-            if command.hidden:
-                continue
-
-            category = self.get_category(
-                command
-            )
-
-            categories.setdefault(
-                category,
-                []
-            )
-
-            categories[category].append(
-                command
-            )
-
-        pages = []
-
-        for category, commands_list in categories.items():
-
-            commands_list.sort(
-                key=lambda command: command.name
-            )
-
-            pages.append(
-                (
-                    category,
-                    commands_list
+            options.append(
+                discord.SelectOption(
+                    label=category,
+                    value=category
                 )
             )
 
-        # =================================
-        # SORT CATEGORIES
-        # =================================
-
-        pages.sort(
-            key=lambda page: page[0].lower()
+        super().__init__(
+            placeholder="Choose a category...",
+            options=options
         )
 
-        if not pages:
+    async def callback(
+        self,
+        interaction: discord.Interaction
+    ):
 
-            await self.get_destination().send(
-                "There are no commands available."
-            )
+        self.help_view.category = self.values[0]
+        self.help_view.page = 0
 
-            return
+        self.help_view.update_buttons()
 
-        view = HelpView(
-            pages,
-            self.context.author,
-            self.context.guild
+        await interaction.response.edit_message(
+            embed=self.help_view.get_embed(),
+            view=self.help_view
         )
 
-        await self.get_destination().send(
-            embed=view.get_embed(),
-            view=view
+
+# =========================================================
+# HELP COMMAND
+# =========================================================
+
+@app_commands.command(
+    name="help",
+    description="Show all available commands"
+)
+async def help_command(
+    interaction: discord.Interaction
+):
+
+    bot = interaction.client
+
+    all_commands = get_commands(bot)
+
+    categories = {}
+
+    for command in all_commands:
+
+        category = get_category(command)
+
+        categories.setdefault(
+            category,
+            []
         )
 
-    # =====================================
-    # SEND COMMAND HELP
-    # =====================================
-
-    async def send_command_help(self, command):
-
-        if command.hidden:
-
-            await self.get_destination().send(
-                "That command doesn't exist."
-            )
-
-            return
-
-        category = self.get_category(
+        categories[category].append(
             command
         )
 
-        prefix = (
-            self.context.bot.command_prefix
+    for category in categories:
+
+        categories[category].sort(
+            key=lambda command:
+            command.qualified_name
         )
 
-        # =================================
-        # GET PREFIX
-        # =================================
+    if not categories:
 
-        if callable(prefix):
-
-            prefix = await prefix(
-                self.context.bot,
-                self.context.message
-            )
-
-        # =================================
-        # AUTOMATIC USAGE
-        # =================================
-
-        if command.usage:
-
-            usage = command.usage
-
-        else:
-
-            usage_parts = []
-
-            for parameter in command.clean_params.values():
-
-                name = parameter.name
-
-                # *args / **kwargs
-
-                if (
-                    parameter.kind
-                    == parameter.VAR_POSITIONAL
-                ):
-
-                    usage_parts.append(
-                        f"[{name}...]"
-                    )
-
-                # Optional parameter
-
-                elif (
-                    parameter.default
-                    is not parameter.empty
-                ):
-
-                    usage_parts.append(
-                        f"[{name}]"
-                    )
-
-                # Required parameter
-
-                else:
-
-                    usage_parts.append(
-                        f"<{name}>"
-                    )
-
-            usage = " ".join(
-                usage_parts
-            )
-
-        # =================================
-        # FULL USAGE
-        # =================================
-
-        full_usage = (
-            f"{prefix}{command.name}"
+        await interaction.response.send_message(
+            "There are no commands available.",
+            ephemeral=True
         )
 
-        if usage:
+        return
 
-            full_usage += (
-                f" {usage}"
-            )
+    view = HelpView(
+        bot,
+        interaction.user.id,
+        categories
+    )
 
-        # =================================
-        # EMBED
-        # =================================
-
-        embed = discord.Embed(
-            title=f"📖 {command.name}",
-            description=(
-                command.help
-                or "No description."
-            )
-        )
-
-        embed.add_field(
-            name="Usage",
-            value=f"`{full_usage}`",
-            inline=False
-        )
-
-        embed.add_field(
-            name="Category",
-            value=category.title(),
-            inline=False
-        )
-
-        # =================================
-        # REQUIRED RANK
-        # =================================
-
-        rank = get_command_rank(
-            self.context.guild,
-            command.name
-        )
-
-        if rank:
-
-            embed.add_field(
-                name="Required rank",
-                value=(
-                    f"{rank[1]} or above"
-                ),
-                inline=False
-            )
-
-        else:
-
-            embed.add_field(
-                name="Required rank",
-                value="Everyone",
-                inline=False
-            )
-
-        # =================================
-        # ALIASES
-        # =================================
-
-        if command.aliases:
-
-            aliases = ", ".join(
-                f"`{alias}`"
-                for alias
-                in command.aliases
-            )
-
-            embed.add_field(
-                name="Aliases",
-                value=aliases,
-                inline=False
-            )
-
-        await self.get_destination().send(
-            embed=embed
-        )
+    await interaction.response.send_message(
+        embed=view.get_embed(),
+        view=view
+    )
 
 
-# =========================================
-# HELP COMMAND INSTANCE
-# =========================================
+# =========================================================
+# SETUP
+# =========================================================
 
-help_command = BotHelpCommand()
+def setup(bot):
+
+    bot.tree.add_command(
+        help_command
+    )
