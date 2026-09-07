@@ -1,67 +1,75 @@
-import asyncio
-
 import discord
-from discord.ext import commands
-
-from ..functions.get_message import get_message
+from discord import app_commands
 
 import mycord
 
 db = mycord.DB()
 
-@commands.command(
-    name="createpanel",
-    help="create ticket pannel"
-)
-async def createpanel(ctx):
 
-    #CHECK IF EMBED CHANNEL IS CONFIGURED
+@app_commands.command(
+    name="createpanel",
+    description="Create a ticket panel"
+)
+@app_commands.describe(
+    title="The title of the ticket panel",
+    description="The description of the ticket panel",
+    image="Panel image (optional)",
+    thumbnail="Panel thumbnail (optional)"
+)
+async def createpanel(
+    interaction: discord.Interaction,
+    title: str,
+    description: str,
+    image: discord.Attachment | None = None,
+    thumbnail: discord.Attachment | None = None
+):
+
     config = db.fetchone(
         "server_config",
         "guild_id = ?",
-        (ctx.guild.id,)
+        (interaction.guild.id,)
     )
-    channel_id = config[4]
-    channel = ctx.guild.get_channel(channel_id)
-    if channel_id is None:
-        await ctx.send("There is no ticket pannel channel configured, go ask pythagoras")
+
+    if config is None:
+        await interaction.response.send_message(
+            "❌ There is no server configuration. Go ask Pythagoras.",
+            ephemeral=True
+        )
         return
 
-    #TITLE
-    await ctx.send("What title do you want for the pannel?")
-    message = await get_message(ctx)
-    title = message.content
+    channel_id = config[4]
 
-    #DESCRIPTION
-    await ctx.send("Add discription")
-    message = await get_message(ctx)
-    description = message.content
+    if channel_id is None:
+        await interaction.response.send_message(
+            "❌ There is no ticket panel channel configured. Go ask Pythagoras.",
+            ephemeral=True
+        )
+        return
 
-    #IMAGE
-    await ctx.send("Add image or type `skip` to skip")
-    message = await get_message(ctx)
-    if message.content.lower() == "skip":
-        image_url = None
-    else:
-        image_url = message.attachments[0].url
+    channel = interaction.guild.get_channel(channel_id)
 
-    #THUMBNAIL
-    await ctx.send("Add thumbnail or type `skip` to skip")
-    message = await get_message(ctx)
-    if message.content.lower() == "skip":
-        thumbnail_url = None
-    else:
-        thumbnail_url = message.attachments[0].url
+    if channel is None:
+        await interaction.response.send_message(
+            "❌ The configured ticket panel channel no longer exists.",
+            ephemeral=True
+        )
+        return
 
-    #EMBED
+    image_url = image.url if image else None
+    thumbnail_url = thumbnail.url if thumbnail else None
+
     embed = discord.Embed(
-        title=f"{title}",
-        description=f"{description}",
+        title=title,
+        description=description,
         color=discord.Color.blue()
     )
-    embed.set_image(url=image_url)
-    embed.set_thumbnail(url=thumbnail_url)
-    
+
+    if image_url:
+        embed.set_image(url=image_url)
+
+    if thumbnail_url:
+        embed.set_thumbnail(url=thumbnail_url)
+
     message = await channel.send(embed=embed)
 
     db.insert(
@@ -74,24 +82,35 @@ async def createpanel(ctx):
         image_url,
         thumbnail_url
         """,
-        (ctx.guild.id,
-         message.id, title,
-         description,
-         image_url,
-         thumbnail_url
+        (
+            interaction.guild.id,
+            message.id,
+            title,
+            description,
+            image_url,
+            thumbnail_url
         )
     )
+
     panel = db.fetchone(
         "ticket_panels",
         "message_id = ?",
         (message.id,)
     )
+
     panel_id = panel[0]
 
-    embed.set_footer(text=f"PANEL_ID: {panel_id}")
+    embed.set_footer(
+        text=f"PANEL_ID: {panel_id}"
+    )
+
     await message.edit(embed=embed)
-    
-    await ctx.send("✅️ Pannel created.")
+
+    await interaction.response.send_message(
+        "✅ Ticket panel created.",
+        ephemeral=True
+    )
+
 
 def setup(bot):
-    bot.add_command(createpanel)
+    bot.tree.add_command(createpanel)
