@@ -1,38 +1,40 @@
 import discord
-from discord.ext import commands
+from discord import app_commands
 
 from ..functions.find_category import find_category
 
 
-@commands.command(
+@app_commands.command(
     name="addchannel",
-    help="Create a text channel inside a category."
+    description="Create a text channel inside a category."
 )
-async def addchannel(ctx, *, names: str):
-
-    parts = names.split()
-
-    channel_name = parts[-1]
-    category_name = " ".join(parts[:-1])
-
-    category, error = find_category(
-        ctx.guild,
-        category_name
+@app_commands.describe(
+    category="The category to create the channel in.",
+    name="The name of the new text channel."
+)
+async def addchannel(
+    interaction: discord.Interaction,
+    category: str,
+    name: str
+):
+    category_obj, error = find_category(
+        interaction.guild,
+        category
     )
 
     if error:
-        await ctx.send(error)
+        await interaction.response.send_message(error, ephemeral=True)
         return
 
-    channel = await ctx.guild.create_text_channel(
-        name=channel_name,
-        category=category
+    channel = await interaction.guild.create_text_channel(
+        name=name,
+        category=category_obj
     )
 
-    await ctx.send(
-        f"✅ Created {channel.mention} in **{category.name}**."
+    await interaction.response.send_message(
+        f"✅ Created {channel.mention} in **{category_obj.name}**."
     )
 
 
 def setup(bot):
-    bot.add_command(addchannel)
+    bot.tree.add_command(addchannel)
