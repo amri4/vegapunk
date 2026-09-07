@@ -1,6 +1,6 @@
 import discord
 
-from .button import VerificationView
+from ..buttons.verifybutton import VerificationView
 
 
 async def send_verification_panel(
