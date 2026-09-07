@@ -7,6 +7,18 @@ from discord import app_commands
 
 db = mycord.DB()
 
+db.create_table(
+    "warnings",
+    """
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    guild_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    moderator_id INTEGER NOT NULL,
+    reason TEXT NOT NULL,
+    created_at TEXT NOT NULL
+    """
+)
+
 
 @app_commands.command(
     name="warn",
@@ -62,57 +74,26 @@ async def warn(
         await interaction.response.send_message(random.choice(responses))
         return
 
-    try:
-        db.execute(
-            """
-            CREATE TABLE IF NOT EXISTS warnings (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                guild_id INTEGER NOT NULL,
-                user_id INTEGER NOT NULL,
-                moderator_id INTEGER NOT NULL,
-                reason TEXT NOT NULL,
-                created_at TEXT NOT NULL
-            )
-            """
+    db.insert(
+        "warnings",
+        "guild_id, user_id, moderator_id, reason, created_at",
+        (
+            interaction.guild.id,
+            member.id,
+            interaction.user.id,
+            reason,
+            discord.utils.utcnow().isoformat()
         )
+    )
 
-        db.execute(
-            """
-            INSERT INTO warnings (
-                guild_id,
-                user_id,
-                moderator_id,
-                reason,
-                created_at
-            )
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            (
-                interaction.guild.id,
-                member.id,
-                interaction.user.id,
-                reason,
-                discord.utils.utcnow().isoformat()
-            )
-        )
+    responses = [
+        f"{member.mention} has been warned. Don't make me do it again.",
+        f"Tch. {member.mention}, consider this your warning.",
+        f"{member.mention} has received a warning. Try not to test my patience.",
+        f"Warning issued to {member.mention}. That's one mark against you."
+    ]
 
-        responses = [
-            f"{member.mention} has been warned. Don't make me do it again.",
-            f"Tch. {member.mention}, consider this your warning.",
-            f"{member.mention} has received a warning. Try not to test my patience.",
-            f"Warning issued to {member.mention}. That's one mark against you."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
-
-    except Exception:
-        responses = [
-            "Tch. Something went wrong while recording the warning.",
-            "I couldn't record the warning. Try again.",
-            "The warning failed to register. Annoying."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
+    await interaction.response.send_message(random.choice(responses))
 
 
 def setup(bot):
