@@ -3,6 +3,7 @@ import random
 import discord
 from discord import app_commands
 
+from .panel import send_verification_panel
 from .setup import db
 
 
@@ -42,27 +43,70 @@ async def verification(
         )
         return
 
-    db.update(
-        "verification_config",
-        "enabled = ?",
-        "guild_id = ?",
-        (
-            1 if status.value == "on" else 0,
-            interaction.guild.id
-        )
-    )
-
     if status.value == "on":
+
+        if config[3] == 1:
+            await interaction.response.send_message(
+                "Tch. Verification is already enabled."
+            )
+            return
+
+        channel = await interaction.guild.create_text_channel(
+            "verification"
+        )
+
+        db.update(
+            "verification_config",
+            "verification_channel_id = ?, enabled = 1",
+            "guild_id = ?",
+            (
+                channel.id,
+                interaction.guild.id
+            )
+        )
+
+        await send_verification_panel(channel)
+
         responses = [
-            "🛡️ Verification is now online.",
-            "Tch. The verification gate is active.",
-            "🔐 Verification enabled. Keep the intruders out."
+            f"🛡️ Verification is now online. {channel.mention} has been created.",
+            f"Tch. The verification gate is active in {channel.mention}.",
+            f"🔐 Verification enabled. I've created {channel.mention}."
         ]
+
     else:
+
+        if config[3] == 0:
+            await interaction.response.send_message(
+                "Tch. Verification is already disabled."
+            )
+            return
+
+        channel = None
+
+        if config[2]:
+            channel = interaction.guild.get_channel(
+                config[2]
+            )
+
+        if channel:
+            try:
+                await channel.delete(
+                    reason=f"Verification disabled by {interaction.user}"
+                )
+            except discord.HTTPException:
+                pass
+
+        db.update(
+            "verification_config",
+            "verification_channel_id = NULL, enabled = 0",
+            "guild_id = ?",
+            (interaction.guild.id,)
+        )
+
         responses = [
-            "🔓 Verification is now disabled.",
-            "Tch. The verification gate is down.",
-            "Verification has been switched off."
+            "🔓 Verification is now disabled. The verification channel is gone.",
+            "Tch. The verification gate is down. Channel removed.",
+            "Verification disabled. I've cleaned up the verification channel."
         ]
 
     await interaction.response.send_message(
