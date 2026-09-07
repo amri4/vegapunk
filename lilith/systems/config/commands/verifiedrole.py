@@ -1,19 +1,9 @@
 import random
 
 import discord
-import mycord
 from discord import app_commands
 
-
-db = mycord.DB()
-
-db.create_table(
-    "verification_config",
-    """
-    guild_id INTEGER PRIMARY KEY,
-    verified_role_id INTEGER NOT NULL
-    """
-)
+from .setup import db
 
 
 @app_commands.command(
@@ -30,10 +20,11 @@ async def set_verified_role(
 ):
     db.insert_replace(
         "verification_config",
-        "guild_id, verified_role_id",
+        "guild_id, verified_role_id, enabled",
         (
             interaction.guild.id,
-            role.id
+            role.id,
+            0
         )
     )
 
