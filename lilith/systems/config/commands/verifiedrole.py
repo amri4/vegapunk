@@ -3,7 +3,7 @@ import random
 import discord
 from discord import app_commands
 
-from .setup import db
+from lilith.systems.verification.setup import db
 
 
 @app_commands.command(
