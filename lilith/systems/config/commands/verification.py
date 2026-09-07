@@ -3,8 +3,8 @@ import random
 import discord
 from discord import app_commands
 
-from .pannel.panel import send_verification_panel
-from .setup import db
+from lilith.systems.verification.pannel.panel import send_verification_panel
+from lilith.systems.verification.setup import db
 
 
 @app_commands.command(
