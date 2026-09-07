@@ -1,4 +1,4 @@
-from .button import VerificationView
+from .buttons.verifybutton import VerificationView
 
 
 def setup(bot):
