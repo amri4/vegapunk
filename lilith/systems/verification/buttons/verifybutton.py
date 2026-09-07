@@ -1,9 +1,11 @@
 import discord
 
-from .setup import db
+from ..setup import db
 
 
-class VerifyButton(discord.ui.Button):
+class VerifyButton(
+    discord.ui.Button
+):
 
     def __init__(self):
         super().__init__(
@@ -29,13 +31,15 @@ class VerifyButton(discord.ui.Button):
             )
             return
 
-        if config[2] != 1:
+        if config[3] != 1:
             await interaction.response.send_message(
                 "🔓 Verification is currently disabled."
             )
             return
 
-        role = interaction.guild.get_role(config[1])
+        role = interaction.guild.get_role(
+            config[1]
+        )
 
         if role is None:
             await interaction.response.send_message(
@@ -61,8 +65,7 @@ class VerifyButton(discord.ui.Button):
 
         except discord.Forbidden:
             await interaction.response.send_message(
-                "Tch. I can't give you the verification role. "
-                "Check my role hierarchy and permissions."
+                "Tch. I can't give you the verification role."
             )
 
         except discord.HTTPException:
@@ -71,7 +74,9 @@ class VerifyButton(discord.ui.Button):
             )
 
 
-class VerificationView(discord.ui.View):
+class VerificationView(
+    discord.ui.View
+):
 
     def __init__(self):
         super().__init__(
