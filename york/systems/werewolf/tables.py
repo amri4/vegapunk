@@ -26,16 +26,3 @@ db.create_table(
     alive INTEGER NOT NULL DEFAULT 1
     """
 )
-
-db.create_table(
-    "werewolf_actions",
-    """
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    game_id INTEGER NOT NULL,
-    player_id INTEGER NOT NULL,
-    action_type TEXT NOT NULL,
-    target_id INTEGER,
-    phase TEXT,
-    created_at INTEGER NOT NULL
-    """
-)
