@@ -1,36 +1,28 @@
 import discord
-from discord.ext import commands
-
-from ..functions.find_category import find_category
+from discord import app_commands
 
 
-@commands.command(
+@app_commands.command(
     name="delcategory",
-    help="Delete a server category."
+    description="Delete a server category."
 )
-async def delcategory(ctx, *, name: str):
-
-    category = find_category(
-        ctx.guild,
-        name
-    )
-
-    if category is None:
-        await ctx.send(
-            "❌ I couldn't find that category."
-        )
-        return
-
+@app_commands.describe(
+    category="The category to delete."
+)
+async def delcategory(
+    interaction: discord.Interaction,
+    category: discord.CategoryChannel
+):
     category_name = category.name
 
     await category.delete(
-        reason=f"Deleted by {ctx.author}"
+        reason=f"Deleted by {interaction.user}"
     )
 
-    await ctx.send(
+    await interaction.response.send_message(
         f"🗑️ Deleted category **{category_name}**."
     )
 
 
 def setup(bot):
-    bot.add_command(delcategory)
+    bot.tree.add_command(delcategory)
