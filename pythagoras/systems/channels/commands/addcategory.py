@@ -1,30 +1,36 @@
 import discord
-from discord.ext import commands
+from discord import app_commands
 
 
-@commands.command(
+@app_commands.command(
     name="addcategory",
-    help="Create a new server category."
+    description="Create a new server category."
 )
-async def addcategory(ctx, *, name: str):
-
+@app_commands.describe(
+    name="The name of the new server category."
+)
+async def addcategory(
+    interaction: discord.Interaction,
+    name: str
+):
     name = name.strip()
 
     if not name:
-        await ctx.send(
-            "❌ Please provide a category name."
+        await interaction.response.send_message(
+            "❌ Please provide a category name.",
+            ephemeral=True
         )
         return
 
-    category = await ctx.guild.create_category(
+    category = await interaction.guild.create_category(
         name=name,
-        reason=f"Created by {ctx.author}"
+        reason=f"Created by {interaction.user}"
     )
 
-    await ctx.send(
+    await interaction.response.send_message(
         f"✅ Created category **{category.name}**."
     )
 
 
 def setup(bot):
-    bot.add_command(addcategory)
+    bot.tree.add_command(addcategory)
