@@ -10,10 +10,10 @@ class Bot(commands.Bot):
         self.bot_name = Path(__file__).parent.name
 
         super().__init__(
-            command_prefix="Lilith ",
+            command_prefix="Pythagoras ",
             intents=discord.Intents.all(),
             help_command=None,
-            application_id=int(os.getenv("LILITH_APPLICATION_ID"))
+            application_id=int(os.getenv("PYTHAGORAS_APPLICATION_ID"))
         )
 
     async def setup_hook(self):
