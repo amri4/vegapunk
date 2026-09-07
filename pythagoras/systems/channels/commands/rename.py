@@ -1,37 +1,40 @@
 import discord
-from discord.ext import commands
-
-from ..functions.find_channel import find_channel
+from discord import app_commands
 
 
-@commands.command(
+@app_commands.command(
     name="renamechannel",
-    help="Rename a channel."
+    description="Rename a channel."
 )
-async def renamechannel(ctx, channel_input: str = None, *, name: str = None):
-
-    if not channel_input:
-        await ctx.send("❌ Please specify a channel.")
-        return
+@app_commands.describe(
+    channel="The channel you want to rename.",
+    name="The new name for the channel."
+)
+async def renamechannel(
+    interaction: discord.Interaction,
+    channel: discord.TextChannel,
+    name: str
+):
+    name = name.strip()
 
     if not name:
-        await ctx.send("❌ Please specify a new name.")
-        return
-
-    channel = find_channel(ctx.guild, channel_input)
-
-    if channel is None:
-        await ctx.send("❌ Channel not found.")
+        await interaction.response.send_message(
+            "❌ Please specify a new name.",
+            ephemeral=True
+        )
         return
 
     old_name = channel.name
 
-    await channel.edit(name=name)
+    await channel.edit(
+        name=name,
+        reason=f"Renamed by {interaction.user}"
+    )
 
-    await ctx.send(
+    await interaction.response.send_message(
         f"✅ Renamed **{old_name}** to **{name}**."
     )
 
 
 def setup(bot):
-    bot.add_command(renamechannel)
+    bot.tree.add_command(renamechannel)
