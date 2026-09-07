@@ -1,4 +1,5 @@
 import random
+from datetime import timedelta
 
 import discord
 from discord import app_commands
@@ -62,7 +63,7 @@ async def timeout(
 
     try:
         await member.timeout(
-            discord.utils.utcnow() + discord.timedelta(minutes=duration),
+            discord.utils.utcnow() + timedelta(minutes=duration),
             reason=f"{reason} | Timed out by {interaction.user}"
         )
 
