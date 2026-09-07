@@ -1,35 +1,28 @@
 import discord
-from discord.ext import commands
-
-from ..functions.find_channel import find_channel
+from discord import app_commands
 
 
-@commands.command(
+@app_commands.command(
     name="delchannel",
-    help="Delete a channel."
+    description="Delete a channel."
 )
-async def delchannel(ctx, channel_input: str = None):
-
-    if not channel_input:
-        await ctx.send("❌ Please specify a channel.")
-        return
-
-    channel = find_channel(ctx.guild, channel_input)
-
-    if channel is None:
-        await ctx.send("❌ Channel not found.")
-        return
-
+@app_commands.describe(
+    channel="The channel to delete."
+)
+async def delchannel(
+    interaction: discord.Interaction,
+    channel: discord.TextChannel
+):
     channel_name = channel.name
 
     await channel.delete(
-        reason=f"Deleted by {ctx.author}"
+        reason=f"Deleted by {interaction.user}"
     )
 
-    await ctx.send(
+    await interaction.response.send_message(
         f"✅ Deleted **{channel_name}**."
     )
 
 
 def setup(bot):
-    bot.add_command(delchannel)
+    bot.tree.add_command(delchannel)
