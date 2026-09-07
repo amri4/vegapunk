@@ -3,7 +3,7 @@ import random
 import discord
 from discord import app_commands
 
-from .panel import send_verification_panel
+from .pannel.panel import send_verification_panel
 from .setup import db
 
 
@@ -16,11 +16,19 @@ from .setup import db
 )
 @app_commands.choices(
     status=[
-        app_commands.Choice(name="On", value="on"),
-        app_commands.Choice(name="Off", value="off")
+        app_commands.Choice(
+            name="On",
+            value="on"
+        ),
+        app_commands.Choice(
+            name="Off",
+            value="off"
+        )
     ]
 )
-@app_commands.default_permissions(manage_guild=True)
+@app_commands.default_permissions(
+    manage_guild=True
+)
 async def verification(
     interaction: discord.Interaction,
     status: app_commands.Choice[str]
@@ -65,7 +73,9 @@ async def verification(
             )
         )
 
-        await send_verification_panel(channel)
+        await send_verification_panel(
+            channel
+        )
 
         responses = [
             f"🛡️ Verification is now online. {channel.mention} has been created.",
@@ -115,4 +125,6 @@ async def verification(
 
 
 def setup(bot):
-    bot.tree.add_command(verification)
+    bot.tree.add_command(
+        verification
+    )
