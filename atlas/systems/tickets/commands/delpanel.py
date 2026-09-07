@@ -1,15 +1,21 @@
 import discord
-from discord.ext import commands
+from discord import app_commands
 
 import mycord
 
 db = mycord.DB()
 
-@commands.command(
+@app_commands.command(
     name="delpanel",
-    help="delete an existing delpanel"
+    description="delete an existing delpanel"
 )
-async def delpanel(ctx, pan: int):
+@app_commands.describe(
+    ID="The panel id you want to delete"
+)
+async def delpanel(
+    interaction: discord.Interaction, 
+    pan: int
+):
     panel = db.fetchone(
         "ticket_panels",
         "panel_id = ?",
@@ -18,11 +24,11 @@ async def delpanel(ctx, pan: int):
     config = db.fetchone(
         "server_config",
         "guild_id = ?",
-        (ctx.guild.id,)
+        (interaction.guild.id,)
     )
     channel_id = config[4]
     message_id = panel[2]
-    channel = ctx.guild.get_channel(channel_id)
+    channel = interaction.guild.get_channel(channel_id)
     message = await channel.fetch_message(message_id)
     await message.delete()
     
@@ -31,7 +37,10 @@ async def delpanel(ctx, pan: int):
         "panel_id = ?",
         (pan,)
     )
-    await ctx.send("✅️ Panel deleted")
+    await interaction.response.send_message(
+        "✅️ Panel deleted",
+        ephemeral=True
+    )
 
 def setup(bot):
-    bot.add_command(delpanel)
+    bot.tree.add_command(delpanel)
