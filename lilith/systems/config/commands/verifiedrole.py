@@ -13,17 +13,20 @@ from .setup import db
 @app_commands.describe(
     role="The role members will receive when they verify."
 )
-@app_commands.default_permissions(manage_guild=True)
+@app_commands.default_permissions(
+    manage_guild=True
+)
 async def set_verified_role(
     interaction: discord.Interaction,
     role: discord.Role
 ):
     db.insert_replace(
         "verification_config",
-        "guild_id, verified_role_id, enabled",
+        "guild_id, verified_role_id, verification_channel_id, enabled",
         (
             interaction.guild.id,
             role.id,
+            None,
             0
         )
     )
@@ -41,4 +44,6 @@ async def set_verified_role(
 
 
 def setup(bot):
-    bot.tree.add_command(set_verified_role)
+    bot.tree.add_command(
+        set_verified_role
+    )
