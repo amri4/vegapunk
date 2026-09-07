@@ -5,7 +5,7 @@ async def get_command_mentions(bot):
     commands = await bot.tree.fetch_commands()
 
     return {
-        command.qualified_name: command.mention
+        command.name: command.mention
         for command in commands
     }
 
@@ -19,10 +19,11 @@ async def build_help_embed(
 ):
     bot_name = getattr(bot, "bot_name", "Bot")
 
-    if mode == "prefix":
-        description = "💬 **Prefix Commands**"
-    else:
-        description = "⚡ **Slash Commands**"
+    description = (
+        "💬 **Prefix Commands**"
+        if mode == "prefix"
+        else "⚡ **Slash Commands**"
+    )
 
     embed = discord.Embed(
         title=f"📖 {bot_name} Help",
@@ -31,7 +32,8 @@ async def build_help_embed(
 
     if not category_names:
         command_type = (
-            "prefix" if mode == "prefix"
+            "prefix"
+            if mode == "prefix"
             else "slash"
         )
 
@@ -53,8 +55,8 @@ async def build_help_embed(
 
         for command in command_list:
             name = mentions.get(
-                command.qualified_name,
-                f"`/{command.qualified_name}`"
+                command.name,
+                f"`/{command.name}`"
             )
 
             description = (
