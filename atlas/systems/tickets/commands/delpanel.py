@@ -14,12 +14,12 @@ db = mycord.DB()
 )
 async def delpanel(
     interaction: discord.Interaction, 
-    pan: int
+    ID: int
 ):
     panel = db.fetchone(
         "ticket_panels",
         "panel_id = ?",
-        (pan,)
+        (ID,)
     )
     config = db.fetchone(
         "server_config",
@@ -35,7 +35,7 @@ async def delpanel(
     db.delete(
         "ticket_panels",
         "panel_id = ?",
-        (pan,)
+        (ID,)
     )
     await interaction.response.send_message(
         "✅️ Panel deleted",
