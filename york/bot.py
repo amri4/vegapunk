@@ -10,10 +10,10 @@ class Bot(commands.Bot):
         self.bot_name = Path(__file__).parent.name
 
         super().__init__(
-            command_prefix="Atlas ",
+            command_prefix="York ",
             intents=discord.Intents.all(),
             help_command=None,
-            application_id=int(os.getenv("ATLAS_APPLICATION_ID"))
+            application_id=int(os.getenv("YORK_APPLICATION_ID"))
         )
 
     async def setup_hook(self):
