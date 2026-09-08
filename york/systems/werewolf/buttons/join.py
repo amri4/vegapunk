@@ -32,3 +32,4 @@ class JoinButton(discord.ui.Button):
             "game_id, user_id",
             (self.game_id, interaction.user.id)
         )
+        self.callback = self.join_callback
