@@ -36,11 +36,11 @@ async def werewolf(
             interaction.user.id
         )
     )
-    players = db.fetchone(
-        "werewolf_players",
-        "game_id = ?",
-        (current_game,)
-    )
+    players = [
+        player
+        for player in db.fetchall("werewolf_players")
+        if player[1] == current_game
+    ]
     player_count = len(players)
 
     embed = discord.Embed(
@@ -49,11 +49,11 @@ async def werewolf(
     )
     embed.add_field(
         name="👤 Players in lobby",
-        value=f"**{player_count}** player(s)"
+        value=f"**{player_count}** player(s)",
         inline=True
     )
     await interaction.response.send_message(
-        "Game worked!"
+        embed=embed
     )
 
 def setup(bot):
