@@ -19,6 +19,18 @@ class StartButton(discord.ui.Button):
         self,
         interaction: discord.Interaction
     ):
+        game = db.fetchone(
+            "werewolf_games",
+            "id = ?",
+            (self.game_id,)
+        )
+        if interaction.user.id != game[3]:
+            await interaction.response.send_message(
+                "❌ Only the game creator can start the game.",
+                ephemeral=True
+            )
+            return
+        
         real_players = [
             player
             for player in db.fetchall("werewolf_players")
