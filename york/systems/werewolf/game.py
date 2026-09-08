@@ -4,4 +4,20 @@ db = mycord.DB()
 
 
 def start_game(game_id):
+    real_players = [
+        player
+        for player in db.fetchall("werewolf_players")
+        if player[1] == self.game_id and player[3] == 0
+    ]
+
+    real_count = len(real_players)
+
+    bots_needed = max(0, 5 - real_count)
+
+    for i in range(bots_needed):
+        db.insert(
+            "werewolf_players",
+            "game_id, is_bot, display_name",
+            (self.game_id, 1, f"York Bot {i + 1}")
+        )
     pass
