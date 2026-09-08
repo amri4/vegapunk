@@ -7,3 +7,4 @@ class JoinButton(discord.ui.Button):
             emoji="➕️",
             style=discord.ButtonStyle.success
         )
+        self.game_id = game_id
