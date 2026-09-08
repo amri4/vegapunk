@@ -34,5 +34,6 @@ class JoinButton(discord.ui.Button):
             (self.game_id, interaction.user.id)
         )
         await interaction.response.send_message(
-            "🐺 You have been added to the game"
+            "🐺 You have been added to the game",
+            ephemeral=True
         )
