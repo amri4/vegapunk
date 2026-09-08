@@ -16,5 +16,5 @@ async def werewolf(
         f"{players}"
     )
 
- def setup(bot):
+def setup(bot):
     bot.tree.add_command(werewolf)
