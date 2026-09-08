@@ -6,6 +6,11 @@ def assign_roles(
     seers,
     doctors
 ):
+    if werewolves + seers + doctors > len(players):
+        return None
+        
+    villagers = len(players) - werewolves - seers - doctors
+    
     roles = (
         ["werewolf"] * werewolves
         + ["seer"] * seers
