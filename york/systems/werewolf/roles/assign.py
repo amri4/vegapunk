@@ -7,6 +7,8 @@ def assign_roles(
     seers,
     doctors
 ):
+    if werewolves < 1:
+        return None
     if werewolves + seers + doctors > len(players):
         return None
         
