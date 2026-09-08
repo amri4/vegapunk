@@ -22,11 +22,14 @@ async def werewolf(
 ):
     db.insert(
         "werewolf_games",
-        "guild_id, channel_id, creator_id",
+        "guild_id, channel_id, creator_id, werewolves, seers, doctors",
         (
             interaction.guild.id,
             interaction.channel.id,
-            interaction.user.id
+            interaction.user.id,
+            werewolves,
+            seers,
+            doctors
         )
     )
     game = db.fetchone(
