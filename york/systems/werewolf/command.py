@@ -1,7 +1,9 @@
 import discord
 from discord import app_commands
+
 from .buttons.join import JoinButton
 from .buttons.leave import LeaveButton
+from .buttons.start import StartButton
 
 import mycord
 
@@ -59,9 +61,12 @@ async def werewolf(
         value=f"**{player_count}** player(s)\n{player_mentions}",
         inline=True
     )
+   
     view = discord.ui.View()
     view.add_item(JoinButton(current_game))
     view.add_item(LeaveButton(current_game))
+    view.add_item(StartButton(current_game))
+    
     await interaction.response.send_message(
         embed=embed,
         view=view
