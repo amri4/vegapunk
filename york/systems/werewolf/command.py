@@ -5,9 +5,7 @@ import mycord
 
 db = mycord.DB()
 
-@app_commands.describe(
-    players="Select players joining the game"
-)
+
 @app_commands.command(
     name="werewolf",
     description="play the werewolf game"
@@ -37,6 +35,22 @@ async def werewolf(
             current_game,
             interaction.user.id
         )
+    )
+    players = db.fetchone(
+        "werewolf_players",
+        "game_id = ?",
+        (current_game,)
+    )
+    player_count = len(players)
+
+    embed = discord.Embed(
+        title="🐺 Werewolf game lobby",
+        description="Click the buttons bellow to join/leave\n\n Waiting for players..."
+    )
+    embed.add_field(
+        name="👤 Players in lobby",
+        value=f"**{player_count}** player(s)"
+        inline=True
     )
     await interaction.response.send_message(
         "Game worked!"
