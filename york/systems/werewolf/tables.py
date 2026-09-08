@@ -11,7 +11,6 @@ db.create_table(
     creator_id INTEGER NOT NULL,
     status TEXT NOT NULL DEFAULT 'lobby',
     phase TEXT,
-    created_at INTEGER NOT NULL,
     werewolves INTEGER NOT NULL,
     seers INTEGER NOT NULL,
     doctors INTEGER NOT NULL
