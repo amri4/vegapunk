@@ -45,11 +45,13 @@ def start_game(game_id):
         if player[1] == game_id
     ]
 
-    assign_roles(
+    result = assign_roles(
         db,
         players,
         werewolves,
         seers,
         doctors
     )
+    if result is None:
+        return False
     return True
