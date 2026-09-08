@@ -6,6 +6,11 @@ db = mycord.DB()
 
 
 def start_game(game_id):
+    game = db.fetchone(
+        "werewolf_games",
+        "id = ?",
+        (game_id,)
+    )
     real_players = [
         player
         for player in db.fetchall("werewolf_players")
