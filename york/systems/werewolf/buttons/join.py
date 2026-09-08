@@ -34,6 +34,23 @@ class JoinButton(discord.ui.Button):
             "game_id, user_id",
             (self.game_id, interaction.user.id)
         )
+        players = [
+        player
+        for player in db.fetchall("werewolf_players")
+        if player[1] == current_game
+        ]
+        player_count = len(players)
+
+        embed = discord.Embed(
+            title="🐺 Werewolf game lobby",
+            description="Click the buttons below to join/leave\n\n Waiting for players..."
+        )
+        embed.add_field(
+            name="👤 Players in lobby",
+            value=f"**{player_count}** player(s)",
+            inline=True
+        )
+        await interaction.message.edit(embed=embed)
         await interaction.response.send_message(
             "🐺 You have been added to the game",
             ephemeral=True
