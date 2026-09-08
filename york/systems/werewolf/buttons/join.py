@@ -17,6 +17,7 @@ class JoinButton(discord.ui.Button):
         self,
         interaction: discord.Interaction
     ):
+        message = interaction.message
         player_exists = db.exists(
             "werewolf_players",
             "game_id = ? AND user_id = ?",
