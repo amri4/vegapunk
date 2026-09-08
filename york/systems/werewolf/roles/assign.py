@@ -1,6 +1,7 @@
 import random
 
 def assign_roles(
+    db,
     players,
     werewolves,
     seers,
