@@ -32,3 +32,4 @@ def start_game(game_id):
             "id = ?",
             ("night", game_id)
         )
+    return True
