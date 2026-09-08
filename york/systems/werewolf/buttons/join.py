@@ -24,7 +24,7 @@ class JoinButton(discord.ui.Button):
         )
         if player_exists:
             await interaction.response.send_message(
-                "🙄 Tch, you are already in this game",
+                "You are already in this game",
                 ephemeral=True
             )
             return
@@ -32,4 +32,7 @@ class JoinButton(discord.ui.Button):
             "werewolf_players",
             "game_id, user_id",
             (self.game_id, interaction.user.id)
+        )
+        await interaction.response.send_message(
+            "🐺 You have been added to the game"
         )
