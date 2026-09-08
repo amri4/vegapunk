@@ -24,6 +24,20 @@ async def werewolf(
             interaction.user.id
         )
     )
+    game = db.fetchone(
+        "werewolf_games",
+        "creator_id = ?",
+        (interaction.user.id,)
+    )
+    current_game = game[0]
+    db.insert(
+        "werewolf_players",
+        "game_id, user_id",
+        (
+            current_game,
+            interaction.user.id
+        )
+    )
     await interaction.response.send_message(
         "Game worked!"
     )
