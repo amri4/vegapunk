@@ -40,7 +40,7 @@ class StartButton(discord.ui.Button):
             )
             return
         
-        start_game(self.game_id)
+        started = start_game(self.game_id)
 
         print("Real players:", real_count)
         print("York bots needed:", bots_needed)
