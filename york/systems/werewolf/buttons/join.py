@@ -37,7 +37,7 @@ class JoinButton(discord.ui.Button):
         players = [
         player
         for player in db.fetchall("werewolf_players")
-        if player[1] == current_game
+        if player[1] == self.game_id
         ]
         player_count = len(players)
 
