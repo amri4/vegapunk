@@ -1,6 +1,10 @@
 import discord
 from discord import app_commands
 
+import mycord
+
+db = mycord.DB()
+
 @app_commands.describe(
     players="Select players joining the game"
 )
@@ -9,11 +13,19 @@ from discord import app_commands
     description="play the werewolf game"
 )
 async def werewolf(
-    interaction: discord.Interaction,
-    players: str
+    interaction: discord.Interaction
 ):
+    db.insert(
+        "werewolf_games",
+        "guild_id, channel_id, creator_id",
+        (
+            interaction.guild.id,
+            interaction.channel.id,
+            interaction.user.id
+        )
+    )
     await interaction.response.send_message(
-        f"{players}"
+        "Game worked!"
     )
 
 def setup(bot):
