@@ -15,7 +15,10 @@ db = mycord.DB()
     description="play the werewolf game"
 )
 async def werewolf(
-    interaction: discord.Interaction
+    interaction: discord.Interaction,
+    werewolves: str,
+    seers: str,
+    doctors: str
 ):
     db.insert(
         "werewolf_games",
