@@ -20,7 +20,7 @@ db.create_table(
     """
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     game_id INTEGER NOT NULL,
-    user_id INTEGER NOT NULL,
+    user_id INTEGER,
     is_bot INTEGER NOT NULL DEFAULT 0,
     role TEXT,
     alive INTEGER NOT NULL DEFAULT 1,
