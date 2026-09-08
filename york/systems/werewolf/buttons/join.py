@@ -51,6 +51,7 @@ class JoinButton(discord.ui.Button):
             inline=True
         )
         await interaction.message.edit(embed=embed)
+        
         await interaction.response.send_message(
             "🐺 You have been added to the game",
             ephemeral=True
