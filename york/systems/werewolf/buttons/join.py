@@ -41,13 +41,18 @@ class JoinButton(discord.ui.Button):
         ]
         player_count = len(players)
 
+        player_mentions = "\n".join(
+            f"<@{player[2]}>"
+            for player in players
+        )
+
         embed = discord.Embed(
             title="🐺 Werewolf game lobby",
             description="Click the buttons below to join/leave\n\n Waiting for players..."
         )
         embed.add_field(
             name="👤 Players in lobby",
-            value=f"**{player_count}** player(s)",
+            value=f"**{player_count}** player(s)\n{player_mentions}",
             inline=True
         )
         await message.edit(embed=embed)
