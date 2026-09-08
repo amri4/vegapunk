@@ -38,3 +38,5 @@ class StartButton(discord.ui.Button):
 
         print("Real players:", real_count)
         print("York bots needed:", bots_needed)
+        self.disabled = True
+        await interaction.message.edit(view=self.view)
