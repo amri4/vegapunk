@@ -22,8 +22,8 @@ db.create_table(
     game_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
     is_bot INTEGER NOT NULL DEFAULT 0,
-    display_name TEXT,
     role TEXT,
-    alive INTEGER NOT NULL DEFAULT 1
+    alive INTEGER NOT NULL DEFAULT 1,
+    display_name TEXT
     """
 )
