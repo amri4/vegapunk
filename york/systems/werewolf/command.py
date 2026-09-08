@@ -46,7 +46,7 @@ async def werewolf(
 
     embed = discord.Embed(
         title="🐺 Werewolf game lobby",
-        description="Click the buttons bellow to join/leave\n\n Waiting for players..."
+        description="Click the buttons below to join/leave\n\n Waiting for players..."
     )
     embed.add_field(
         name="👤 Players in lobby",
