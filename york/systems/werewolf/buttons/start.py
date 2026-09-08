@@ -29,5 +29,12 @@ class StartButton(discord.ui.Button):
 
         bots_needed = max(0, 5 - real_count)
 
+        for i in range(bots_needed):
+            db.insert(
+                "werewolf_players",
+                "game_id, is_bot, display_name",
+                (self.game_id, 1, f"York Bot {i + 1}")
+            )
+
         print("Real players:", real_count)
         print("York bots needed:", bots_needed)
