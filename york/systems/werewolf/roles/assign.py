@@ -19,4 +19,3 @@ def assign_roles(
     )
 
     random.shuffle(roles)
-    pass
