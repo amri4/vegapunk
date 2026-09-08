@@ -11,7 +11,7 @@ class LeaveButton(discord.ui.Button):
             style=discord.ButtonStyle.danger
         )
         self.game_id = game_id
-        self.callback = self.join_callback
+        self.callback = self.leave_callback
 
     async def leave_callback(
         self,
