@@ -30,6 +30,13 @@ class StartButton(discord.ui.Button):
                 ephemeral=True
             )
             return
+
+        if real_count < 1:
+            await interaction.response.send_message(
+                "❌ There are no players in the game.",
+                ephemeral=True
+            )
+            return
         
         real_players = [
             player
