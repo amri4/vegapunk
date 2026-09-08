@@ -1,6 +1,8 @@
 import discord
 import mycord
 
+from ..game import start_game
+
 db = mycord.DB()
 
 
