@@ -50,7 +50,7 @@ class JoinButton(discord.ui.Button):
             value=f"**{player_count}** player(s)",
             inline=True
         )
-        await interaction.message.edit(embed=embed)
+        await message.edit(embed=embed)
         
         await interaction.response.send_message(
             "🐺 You have been added to the game",
