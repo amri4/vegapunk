@@ -42,7 +42,12 @@ class StartButton(discord.ui.Button):
         
         started = start_game(self.game_id)
 
-        print("Real players:", real_count)
-        print("York bots needed:", bots_needed)
+        if not started:
+            await interaction.response.send_message(
+                "❌ The role setup is invalid.",
+                ephemeral=True
+            )
+            return
+
         self.disabled = True
         await interaction.message.edit(view=self.view)
