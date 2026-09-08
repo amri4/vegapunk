@@ -11,6 +11,7 @@ class JoinButton(discord.ui.Button):
             style=discord.ButtonStyle.success
         )
         self.game_id = game_id
+        self.callback = self.join_callback
 
     async def join_callback(
         self,
@@ -32,4 +33,3 @@ class JoinButton(discord.ui.Button):
             "game_id, user_id",
             (self.game_id, interaction.user.id)
         )
-        self.callback = self.join_callback
