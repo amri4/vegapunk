@@ -19,3 +19,7 @@ async def on_message(message: discord.Message):
         message.author.id,
         added_bounty
     )
+
+
+def setup(bot):
+    bot.add_listener(on_message)
