@@ -1,21 +1,28 @@
-from discord.ext import commands
+import discord
+from discord import app_commands
 
 from ..functions.find_role import find_role
 
 
-@commands.command(
+@app_commands.command(
     name="delrole",
-    help="Delete a server role."
+    description="Delete a server role."
 )
-async def delrole(ctx, *, name: str):
+@app_commands.describe(
+    name="The name of the role to delete."
+)
+async def delrole(
+    interaction: discord.Interaction,
+    name: str
+):
 
     result = find_role(
-        ctx.guild,
+        interaction.guild,
         name
     )
 
     if result is None:
-        await ctx.send(
+        await interaction.response.send_message(
             "❌ I couldn't find that role."
         )
         return
@@ -27,7 +34,7 @@ async def delrole(ctx, *, name: str):
             for role in result[:10]
         )
 
-        await ctx.send(
+        await interaction.response.send_message(
             "❌ Multiple roles found:\n"
             + names
         )
@@ -35,14 +42,14 @@ async def delrole(ctx, *, name: str):
 
     role = result
 
-    if role == ctx.guild.default_role:
-        await ctx.send(
+    if role == interaction.guild.default_role:
+        await interaction.response.send_message(
             "❌ I can't delete @everyone."
         )
         return
 
-    if role >= ctx.guild.me.top_role:
-        await ctx.send(
+    if role >= interaction.guild.me.top_role:
+        await interaction.response.send_message(
             "❌ I can't delete that role because "
             "it's higher than or equal to my "
             "highest role."
@@ -52,13 +59,13 @@ async def delrole(ctx, *, name: str):
     role_name = role.name
 
     await role.delete(
-        reason=f"Deleted by {ctx.author}"
+        reason=f"Deleted by {interaction.user}"
     )
 
-    await ctx.send(
+    await interaction.response.send_message(
         f"🗑️ Deleted role **{role_name}**."
     )
 
 
 def setup(bot):
-    bot.add_command(delrole)
+    bot.tree.add_command(delrole)
