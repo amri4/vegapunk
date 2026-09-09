@@ -1,30 +1,36 @@
 import discord
-from discord.ext import commands
+from discord import app_commands
 
 
-@commands.command(
+@app_commands.command(
     name="addrole",
-    help="Create a new server role."
+    description="Create a new server role."
 )
-async def addrole(ctx, *, name: str):
+@app_commands.describe(
+    name="The name of the new role."
+)
+async def addrole(
+    interaction: discord.Interaction,
+    name: str
+):
 
     name = name.strip()
 
     if not name:
-        await ctx.send(
+        await interaction.response.send_message(
             "❌ Please provide a role name."
         )
         return
 
-    role = await ctx.guild.create_role(
+    role = await interaction.guild.create_role(
         name=name,
-        reason=f"Created by {ctx.author}"
+        reason=f"Created by {interaction.user}"
     )
 
-    await ctx.send(
+    await interaction.response.send_message(
         f"✅ Created role {role.mention}."
     )
 
 
 def setup(bot):
-    bot.add_command(addrole)
+    bot.tree.add_command(addrole)
