@@ -1,5 +1,10 @@
-from PIL import Image, ImageDraw, ImageFont
+from pathlib import Path
 from io import BytesIO
+
+from PIL import Image, ImageDraw, ImageFont
+
+
+FONT_PATH = Path(__file__).parent / "fonts" / "poster.ttf"
 
 
 def create_poster(
@@ -19,22 +24,22 @@ def create_poster(
     draw = ImageDraw.Draw(image)
 
     title_font = ImageFont.truetype(
-        "arial.ttf",
+        FONT_PATH,
         90
     )
 
     name_font = ImageFont.truetype(
-        "arial.ttf",
+        FONT_PATH,
         45
     )
 
     bounty_font = ImageFont.truetype(
-        "arial.ttf",
+        FONT_PATH,
         50
     )
 
     small_font = ImageFont.truetype(
-        "arial.ttf",
+        FONT_PATH,
         32
     )
 
