@@ -12,9 +12,9 @@ db.create_table(
     status TEXT NOT NULL DEFAULT 'lobby',
     phase TEXT,
     round INTEGER NOT NULL DEFAULT 0,
-    werewolves INTEGER NOT NULL,
-    seers INTEGER NOT NULL,
-    doctors INTEGER NOT NULL
+    werewolves INTEGER DEFAULT 1,
+    seers INTEGER DEFAULT 0,
+    doctors INTEGER DEFAULT 0
     """
 )
 
