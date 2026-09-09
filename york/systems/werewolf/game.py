@@ -3,8 +3,6 @@ import discord
 import mycord
 
 from .roles.assign import assign_roles
-from .views.night import NightView
-from .views.voting import VotingView
 
 db = mycord.DB()
 
@@ -352,6 +350,7 @@ async def resolve_night(game_id, channel):
 
 
 async def start_night(game_id, channel):
+    from .views.night import NightView
     game = get_game(game_id)
 
     if game is None:
@@ -533,6 +532,7 @@ async def resolve_votes(game_id, channel):
 
 
 async def start_voting(game_id, channel):
+    from .views.voting import VotingView
     run_bot_votes(game_id)
 
     if all_votes_done(game_id):
