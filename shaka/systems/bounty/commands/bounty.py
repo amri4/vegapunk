@@ -43,7 +43,7 @@ async def bounty(
     )
 
     embed.set_footer(
-        text="Shaka • Grand Era Bounty System"
+        text=f"{interaction.guild.name} • WANTED • DEAD OR ALIVE"
     )
 
     await interaction.response.send_message(
