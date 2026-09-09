@@ -1,52 +1,29 @@
-from discord.ext import commands
+import discord
+from discord import app_commands
 
-from ..functions.find_role import find_role
 
-
-@commands.command(
+@app_commands.command(
     name="giverole",
-    help="Give a role to a member."
+    description="Give a role to a member."
+)
+@app_commands.describe(
+    member="The member to give the role to.",
+    role="The role to give."
 )
 async def giverole(
-    ctx,
-    member: commands.MemberConverter,
-    role: str
+    interaction: discord.Interaction,
+    member: discord.Member,
+    role: discord.Role
 ):
 
-    result = find_role(
-        ctx.guild,
-        role
-    )
-
-    if result is None:
-        await ctx.send(
-            "❌ I couldn't find that role."
-        )
-        return
-
-    if isinstance(result, list):
-
-        names = "\n".join(
-            f"• {role.mention}"
-            for role in result[:10]
-        )
-
-        await ctx.send(
-            "❌ Multiple roles found:\n"
-            + names
-        )
-        return
-
-    role = result
-
-    if role == ctx.guild.default_role:
-        await ctx.send(
+    if role == interaction.guild.default_role:
+        await interaction.response.send_message(
             "❌ I can't assign @everyone."
         )
         return
 
-    if role >= ctx.guild.me.top_role:
-        await ctx.send(
+    if role >= interaction.guild.me.top_role:
+        await interaction.response.send_message(
             "❌ I can't assign that role because "
             "it's higher than or equal to my "
             "highest role."
@@ -54,7 +31,7 @@ async def giverole(
         return
 
     if role in member.roles:
-        await ctx.send(
+        await interaction.response.send_message(
             f"❌ {member.mention} already has "
             f"{role.mention}."
         )
@@ -62,14 +39,14 @@ async def giverole(
 
     await member.add_roles(
         role,
-        reason=f"Role given by {ctx.author}"
+        reason=f"Role given by {interaction.user}"
     )
 
-    await ctx.send(
+    await interaction.response.send_message(
         f"✅ Added {role.mention} to "
         f"{member.mention}."
     )
 
 
 def setup(bot):
-    bot.add_command(giverole)
+    bot.tree.add_command(giverole)
