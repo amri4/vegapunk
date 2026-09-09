@@ -10,7 +10,7 @@ class Bot(commands.Bot):
         self.bot_name = Path(__file__).parent.name
 
         super().__init__(
-            command_prefix="Atlas ",
+            command_prefix="Shaka ",
             intents=discord.Intents.all(),
             help_command=None,
             application_id=int(os.getenv("ATLAS_APPLICATION_ID"))
