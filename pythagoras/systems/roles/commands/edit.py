@@ -1,8 +1,6 @@
 import discord
 from discord import app_commands
 
-from ..functions.find_role import find_role
-
 
 @app_commands.command(
     name="editrole",
@@ -14,35 +12,9 @@ from ..functions.find_role import find_role
 )
 async def editrole(
     interaction: discord.Interaction,
-    role: str,
+    role: discord.Role,
     name: str
 ):
-
-    result = find_role(
-        interaction.guild,
-        role
-    )
-
-    if result is None:
-        await interaction.response.send_message(
-            "❌ I couldn't find that role."
-        )
-        return
-
-    if isinstance(result, list):
-
-        names = "\n".join(
-            f"• {role.mention}"
-            for role in result[:10]
-        )
-
-        await interaction.response.send_message(
-            "❌ Multiple roles found:\n"
-            + names
-        )
-        return
-
-    role = result
 
     if role == interaction.guild.default_role:
         await interaction.response.send_message(
