@@ -1,54 +1,31 @@
 import discord
-from discord.ext import commands
+from discord import app_commands
 
-from ..functions.find_role import find_role
 from utils.role_colors import parse_role_color
 
 
-@commands.command(
+@app_commands.command(
     name="setrolecolor",
-    help="Change the color of a server role."
+    description="Change the color of a server role."
+)
+@app_commands.describe(
+    role="The role whose color you want to change.",
+    color="The color name or hex code."
 )
 async def setrolecolor(
-    ctx,
-    role: str,
+    interaction: discord.Interaction,
+    role: discord.Role,
     color: str
 ):
 
-    result = find_role(
-        ctx.guild,
-        role
-    )
-
-    if result is None:
-        await ctx.send(
-            "❌ I couldn't find that role."
-        )
-        return
-
-    if isinstance(result, list):
-
-        names = "\n".join(
-            f"• {item.mention}"
-            for item in result[:10]
-        )
-
-        await ctx.send(
-            "❌ Multiple roles found:\n"
-            + names
-        )
-        return
-
-    role = result
-
-    if role == ctx.guild.default_role:
-        await ctx.send(
+    if role == interaction.guild.default_role:
+        await interaction.response.send_message(
             "❌ I can't change the color of @everyone."
         )
         return
 
-    if role >= ctx.guild.me.top_role:
-        await ctx.send(
+    if role >= interaction.guild.me.top_role:
+        await interaction.response.send_message(
             "❌ I can't change that role because "
             "it's higher than or equal to my "
             "highest role."
@@ -58,7 +35,7 @@ async def setrolecolor(
     parsed_color = parse_role_color(color)
 
     if parsed_color is None:
-        await ctx.send(
+        await interaction.response.send_message(
             "❌ Invalid color.\n\n"
             "Use a color name such as "
             "`red`, `crimson`, `cyan`, "
@@ -70,13 +47,13 @@ async def setrolecolor(
 
     await role.edit(
         color=discord.Color(parsed_color),
-        reason=f"Color changed by {ctx.author}"
+        reason=f"Color changed by {interaction.user}"
     )
 
-    await ctx.send(
+    await interaction.response.send_message(
         f"🎨 Changed {role.mention} to `{color}`."
     )
 
 
 def setup(bot):
-    bot.add_command(setrolecolor)
+    bot.tree.add_command(setrolecolor)
