@@ -26,6 +26,7 @@ async def werewolf(
     seers: int,
     doctors: int
 ):
+    print("WEREWOLF AOOOOOO!")
     if interaction.guild is None:
         await interaction.response.send_message(
             "❌ This command can only be used in a server.",
