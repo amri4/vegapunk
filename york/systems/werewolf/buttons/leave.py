@@ -33,10 +33,41 @@ class LeaveButton(discord.ui.Button):
             )
             return
 
+        # Creator leaving cancels the entire lobby
         if interaction.user.id == game[3]:
-            await interaction.response.send_message(
-                "❌ The creator cannot leave their own lobby.",
-                ephemeral=True
+            db.delete(
+                "werewolf_actions",
+                "game_id = ?",
+                (self.game_id,)
+            )
+
+            db.delete(
+                "werewolf_votes",
+                "game_id = ?",
+                (self.game_id,)
+            )
+
+            db.delete(
+                "werewolf_players",
+                "game_id = ?",
+                (self.game_id,)
+            )
+
+            db.delete(
+                "werewolf_games",
+                "id = ?",
+                (self.game_id,)
+            )
+
+            await interaction.response.edit_message(
+                embed=discord.Embed(
+                    title="🐺 Lobby cancelled",
+                    description=(
+                        "The creator left, so the "
+                        "Werewolf lobby was cancelled."
+                    )
+                ),
+                view=None
             )
             return
 
