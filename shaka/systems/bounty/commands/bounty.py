@@ -1,9 +1,7 @@
 import discord
 from discord import app_commands
-import aiohttp
 
 from ..functions.get_bounty import get_bounty
-from ..poster import create_poster
 
 
 @app_commands.command(
@@ -25,28 +23,31 @@ async def bounty(
         member.id
     )
 
-    avatar_url = member.display_avatar.replace(
-        size=512,
-        format="png"
-    ).url
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(avatar_url) as response:
-            avatar_bytes = await response.read()
-
-    poster = create_poster(
-        member.display_name,
-        amount,
-        avatar_bytes
+    embed = discord.Embed(
+        title="🏴‍☠️ WANTED",
+        description=(
+            f"## {member.display_name}\n"
+            f"**☠️ DEAD OR ALIVE**"
+        ),
+        color=discord.Color.dark_red()
     )
 
-    file = discord.File(
-        poster,
-        filename="wanted.png"
+    embed.set_thumbnail(
+        url=member.display_avatar.url
+    )
+
+    embed.add_field(
+        name="💰 BOUNTY",
+        value=f"**{amount:,} BERRIES**",
+        inline=False
+    )
+
+    embed.set_footer(
+        text="Shaka • Grand Era Bounty System"
     )
 
     await interaction.response.send_message(
-        file=file
+        embed=embed
     )
 
 
