@@ -1,26 +1,30 @@
-from discord.ext import commands
+import discord
+from discord import app_commands
 
 from ..functions.find_role import find_role
 
 
-@commands.command(
+@app_commands.command(
     name="editrole",
-    help="Rename an existing server role."
+    description="Rename an existing server role."
+)
+@app_commands.describe(
+    role="The role to rename.",
+    name="The new name for the role."
 )
 async def editrole(
-    ctx,
+    interaction: discord.Interaction,
     role: str,
-    *,
     name: str
 ):
 
     result = find_role(
-        ctx.guild,
+        interaction.guild,
         role
     )
 
     if result is None:
-        await ctx.send(
+        await interaction.response.send_message(
             "❌ I couldn't find that role."
         )
         return
@@ -32,7 +36,7 @@ async def editrole(
             for role in result[:10]
         )
 
-        await ctx.send(
+        await interaction.response.send_message(
             "❌ Multiple roles found:\n"
             + names
         )
@@ -40,14 +44,14 @@ async def editrole(
 
     role = result
 
-    if role == ctx.guild.default_role:
-        await ctx.send(
+    if role == interaction.guild.default_role:
+        await interaction.response.send_message(
             "❌ I can't edit @everyone."
         )
         return
 
-    if role >= ctx.guild.me.top_role:
-        await ctx.send(
+    if role >= interaction.guild.me.top_role:
+        await interaction.response.send_message(
             "❌ I can't edit that role because "
             "it's higher than or equal to my "
             "highest role."
@@ -57,7 +61,7 @@ async def editrole(
     name = name.strip()
 
     if not name:
-        await ctx.send(
+        await interaction.response.send_message(
             "❌ Please provide a new role name."
         )
         return
@@ -66,14 +70,14 @@ async def editrole(
 
     await role.edit(
         name=name,
-        reason=f"Edited by {ctx.author}"
+        reason=f"Edited by {interaction.user}"
     )
 
-    await ctx.send(
+    await interaction.response.send_message(
         f"✏️ Renamed **{old_name}** → "
         f"{role.mention}."
     )
 
 
 def setup(bot):
-    bot.add_command(editrole)
+    bot.tree.add_command(editrole)
