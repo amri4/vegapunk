@@ -13,7 +13,7 @@ class Bot(commands.Bot):
             command_prefix="Shaka ",
             intents=discord.Intents.all(),
             help_command=None,
-            application_id=int(os.getenv("ATLAS_APPLICATION_ID"))
+            application_id=int(os.getenv("SHAKA_APPLICATION_ID"))
         )
 
     async def setup_hook(self):
