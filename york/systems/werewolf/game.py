@@ -80,9 +80,9 @@ def validate_setup(game_id):
     if len(players) < MIN_PLAYERS:
         return False, f"The game needs at least {MIN_PLAYERS} players."
 
-    werewolves = game[6]
-    seers = game[7]
-    doctors = game[8]
+    werewolves = game[7]
+    seers = game[8]
+    doctors = game[9]
 
     if werewolves < 1:
         return False, "There must be at least 1 werewolf."
@@ -231,7 +231,7 @@ def choose_bot_doctor_target(game_id):
 
 def run_bot_night_actions(game_id):
     game = get_game(game_id)
-    round_number = game[7]
+    round_number = game[6]
 
     for player in required_night_actions(game_id):
         if player[3] != 1:
@@ -277,7 +277,7 @@ def majority_target(actions):
 
 async def resolve_night(game_id, channel):
     game = get_game(game_id)
-    round_number = game[7]
+    round_number = game[6]
     players = get_players(game_id)
 
     actions = get_actions(
@@ -356,7 +356,7 @@ async def start_night(game_id, channel):
     if game is None:
         return
 
-    round_number = game[7]
+    round_number = game[6]
 
     set_phase(game_id, "night")
 
@@ -442,7 +442,7 @@ def all_votes_done(game_id):
 
 def run_bot_votes(game_id):
     game = get_game(game_id)
-    round_number = game[7]
+    round_number = game[6]
 
     alive = get_alive_players(game_id)
 
@@ -478,7 +478,7 @@ def run_bot_votes(game_id):
 
 async def resolve_votes(game_id, channel):
     game = get_game(game_id)
-    round_number = game[7]
+    round_number = game[6]
 
     votes = get_votes(game_id, round_number)
 
@@ -610,9 +610,9 @@ async def start_game(game_id, bot):
     result = assign_roles(
         db,
         players,
-        game[6],
         game[7],
-        game[8]
+        game[8],
+        game[9]
     )
 
     if result is None:
