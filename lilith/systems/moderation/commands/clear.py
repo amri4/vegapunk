@@ -11,11 +11,15 @@ from discord import app_commands
 @app_commands.describe(
     amount="The number of messages to delete."
 )
-@app_commands.default_permissions(manage_messages=True)
+@app_commands.default_permissions(
+    manage_messages=True
+)
 async def clear(
     interaction: discord.Interaction,
     amount: app_commands.Range[int, 1, 100]
 ):
+    await interaction.response.defer()
+
     try:
         messages = [
             message
@@ -24,18 +28,21 @@ async def clear(
             )
         ]
 
-        await interaction.response.defer()
+        deleted = 0
 
-        if messages:
-            await interaction.channel.delete_messages(
-                messages
-            )
+        for message in messages:
+            try:
+                await message.delete()
+                deleted += 1
+
+            except discord.NotFound:
+                pass
 
         responses = [
-            f"Tch. {len(messages)} messages are gone.",
-            f"Cleaned up {len(messages)} messages. Try keeping things tidy.",
-            f"{len(messages)} messages erased. Happy now?",
-            f"Done. I removed {len(messages)} messages from this mess."
+            f"Tch. {deleted} messages are gone.",
+            f"Cleaned up {deleted} messages. Try keeping things tidy.",
+            f"{deleted} messages erased. Happy now?",
+            f"Done. I removed {deleted} messages from this mess."
         ]
 
         await interaction.followup.send(
