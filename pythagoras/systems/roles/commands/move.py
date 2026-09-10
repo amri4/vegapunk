@@ -30,7 +30,11 @@ async def moverole(
     target: discord.Role
 ):
 
-    position = position.value
+    if role == target:
+        await interaction.response.send_message(
+            "❌ The two roles must be different."
+        )
+        return
 
     if role == interaction.guild.default_role:
         await interaction.response.send_message(
@@ -41,12 +45,6 @@ async def moverole(
     if target == interaction.guild.default_role:
         await interaction.response.send_message(
             "❌ You can't move a role relative to @everyone."
-        )
-        return
-
-    if role == target:
-        await interaction.response.send_message(
-            "❌ The two roles must be different."
         )
         return
 
@@ -67,29 +65,12 @@ async def moverole(
         )
         return
 
-    if position == "above":
+    target_position = target.position
 
-        if role.position < target.position:
-            new_position = target.position
-
-        else:
-            new_position = target.position + 1
-
+    if position.value == "above":
+        new_position = target_position + 1
     else:
-
-        if role.position > target.position:
-            new_position = target.position
-
-        else:
-            new_position = target.position - 1
-
-    new_position = max(
-        1,
-        min(
-            new_position,
-            bot_role.position - 1
-        )
-    )
+        new_position = target_position
 
     await interaction.guild.edit_role_positions(
         positions={
@@ -100,7 +81,7 @@ async def moverole(
 
     await interaction.response.send_message(
         f"↕️ Moved {role.mention} "
-        f"**{position}** {target.mention}."
+        f"**{position.name.lower()}** {target.mention}."
     )
 
 
