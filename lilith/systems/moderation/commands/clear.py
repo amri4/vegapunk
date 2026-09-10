@@ -16,18 +16,26 @@ async def clear(
     interaction: discord.Interaction,
     amount: app_commands.Range[int, 1, 100]
 ):
-    await interaction.response.defer()
-
     try:
-        deleted = await interaction.channel.purge(
-            limit=amount
-        )
+        messages = [
+            message
+            async for message in interaction.channel.history(
+                limit=amount
+            )
+        ]
+
+        await interaction.response.defer()
+
+        if messages:
+            await interaction.channel.delete_messages(
+                messages
+            )
 
         responses = [
-            f"Tch. {len(deleted)} messages are gone.",
-            f"Cleaned up {len(deleted)} messages. Try keeping things tidy.",
-            f"{len(deleted)} messages erased. Happy now?",
-            f"Done. I removed {len(deleted)} messages from this mess."
+            f"Tch. {len(messages)} messages are gone.",
+            f"Cleaned up {len(messages)} messages. Try keeping things tidy.",
+            f"{len(messages)} messages erased. Happy now?",
+            f"Done. I removed {len(messages)} messages from this mess."
         ]
 
         await interaction.followup.send(
@@ -36,25 +44,21 @@ async def clear(
         )
 
     except discord.Forbidden:
-        responses = [
-            "I don't have permission to clean this place up.",
-            "Tch. Give me Manage Messages first.",
-            "My authority isn't enough to remove these messages."
-        ]
-
         await interaction.followup.send(
-            random.choice(responses)
+            random.choice([
+                "I don't have permission to clean this place up.",
+                "Tch. Give me Manage Messages first.",
+                "My authority isn't enough to remove these messages."
+            ])
         )
 
     except discord.HTTPException:
-        responses = [
-            "Something went wrong. The messages are still there.",
-            "Tch. Discord rejected the cleanup.",
-            "The operation failed. Try again."
-        ]
-
         await interaction.followup.send(
-            random.choice(responses)
+            random.choice([
+                "Something went wrong. The messages are still there.",
+                "Tch. Discord rejected the cleanup.",
+                "The operation failed. Try again."
+            ])
         )
 
 
