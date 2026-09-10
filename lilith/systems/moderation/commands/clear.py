@@ -17,17 +17,25 @@ async def clear(
     amount: app_commands.Range[int, 1, 100]
 ):
     try:
+        messages = []
+
+        async for message in interaction.channel.history(
+            limit=amount
+        ):
+            messages.append(message)
+
         await interaction.response.defer()
 
-        deleted = await interaction.channel.purge(
-            limit=amount
-        )
+        if messages:
+            await interaction.channel.delete_messages(
+                messages
+            )
 
         responses = [
-            f"Tch. {len(deleted)} messages are gone.",
-            f"Cleaned up {len(deleted)} messages. Try keeping things tidy.",
-            f"{len(deleted)} messages erased. Happy now?",
-            f"Done. I removed {len(deleted)} messages from this mess."
+            f"Tch. {len(messages)} messages are gone.",
+            f"Cleaned up {len(messages)} messages. Try keeping things tidy.",
+            f"{len(messages)} messages erased. Happy now?",
+            f"Done. I removed {len(messages)} messages from this mess."
         ]
 
         await interaction.followup.send(
@@ -42,14 +50,9 @@ async def clear(
             "My authority isn't enough to remove these messages."
         ]
 
-        if interaction.response.is_done():
-            await interaction.followup.send(
-                random.choice(responses)
-            )
-        else:
-            await interaction.response.send_message(
-                random.choice(responses)
-            )
+        await interaction.followup.send(
+            random.choice(responses)
+        )
 
     except discord.HTTPException:
         responses = [
@@ -58,14 +61,9 @@ async def clear(
             "The operation failed. Try again."
         ]
 
-        if interaction.response.is_done():
-            await interaction.followup.send(
-                random.choice(responses)
-            )
-        else:
-            await interaction.response.send_message(
-                random.choice(responses)
-            )
+        await interaction.followup.send(
+            random.choice(responses)
+        )
 
 
 def setup(bot):
