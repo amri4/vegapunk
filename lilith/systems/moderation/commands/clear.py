@@ -17,6 +17,8 @@ async def clear(
     amount: app_commands.Range[int, 1, 100]
 ):
     try:
+        await interaction.response.defer()
+
         deleted = await interaction.channel.purge(
             limit=amount
         )
@@ -28,7 +30,7 @@ async def clear(
             f"Done. I removed {len(deleted)} messages from this mess."
         ]
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             random.choice(responses),
             delete_after=5
         )
@@ -40,9 +42,14 @@ async def clear(
             "My authority isn't enough to remove these messages."
         ]
 
-        await interaction.response.send_message(
-            random.choice(responses)
-        )
+        if interaction.response.is_done():
+            await interaction.followup.send(
+                random.choice(responses)
+            )
+        else:
+            await interaction.response.send_message(
+                random.choice(responses)
+            )
 
     except discord.HTTPException:
         responses = [
@@ -51,9 +58,14 @@ async def clear(
             "The operation failed. Try again."
         ]
 
-        await interaction.response.send_message(
-            random.choice(responses)
-        )
+        if interaction.response.is_done():
+            await interaction.followup.send(
+                random.choice(responses)
+            )
+        else:
+            await interaction.response.send_message(
+                random.choice(responses)
+            )
 
 
 def setup(bot):
