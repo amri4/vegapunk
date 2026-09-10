@@ -68,9 +68,20 @@ async def moverole(
         return
 
     if position == "above":
-        new_position = target.position + 1
+
+        if role.position < target.position:
+            new_position = target.position
+
+        else:
+            new_position = target.position + 1
+
     else:
-        new_position = target.position - 1
+
+        if role.position > target.position:
+            new_position = target.position
+
+        else:
+            new_position = target.position - 1
 
     new_position = max(
         1,
@@ -80,8 +91,10 @@ async def moverole(
         )
     )
 
-    await role.edit(
-        position=new_position,
+    await interaction.guild.edit_role_positions(
+        positions={
+            role: new_position
+        },
         reason=f"Moved by {interaction.user}"
     )
 
