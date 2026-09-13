@@ -11,7 +11,7 @@ CHARACTERS = [
     "JINBE",
     "GOING MERRY",
     "THOUSAND SUNNY",
-    "GOL D.  ROGER (GOLD ROGER)",
+    "GOL D_ROGER (GOLD ROGER)",
     "SHANKS",
     "LUCKY. ROO",
     "YASOPP",
