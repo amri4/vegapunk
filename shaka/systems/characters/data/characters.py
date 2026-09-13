@@ -1,5 +1,5 @@
 CHARACTERS = [
-    "MONKEY D.LUFFY",
+    "MONKEY D_LUFFY",
     "RORONOA ZORO",
     "NAMI",
     "USOPP",
