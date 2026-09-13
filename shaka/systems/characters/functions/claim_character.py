@@ -7,13 +7,22 @@ db = mycord.DB()
 
 
 def claim_character(guild_id, character_name, user_id):
-    existing = db.fetchone(
+    existing_character = db.fetchone(
+        "character_claims",
+        "guild_id = ? AND claimed_by = ?",
+        (guild_id, user_id)
+    )
+
+    if existing_character is not None:
+        return False
+
+    existing_claim = db.fetchone(
         "character_claims",
         "guild_id = ? AND character_name = ?",
         (guild_id, character_name)
     )
 
-    if existing is not None:
+    if existing_claim is not None:
         return False
 
     db.insert(
