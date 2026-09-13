@@ -18,36 +18,23 @@ async def clear(
     interaction: discord.Interaction,
     amount: app_commands.Range[int, 1, 100]
 ):
-    await interaction.response.defer()
+    await interaction.response.defer(ephemeral=True)
 
     try:
-        messages = [
-            message
-            async for message in interaction.channel.history(
-                limit=amount
-            )
-        ]
-
-        deleted = 0
-
-        for message in messages:
-            try:
-                await message.delete()
-                deleted += 1
-
-            except discord.NotFound:
-                pass
+        # purge handles bulk deletion efficiently and catches discord.NotFound internally
+        deleted = await interaction.channel.purge(limit=amount)
+        deleted_count = len(deleted)
 
         responses = [
-            f"Tch. {deleted} messages are gone.",
-            f"Cleaned up {deleted} messages. Try keeping things tidy.",
-            f"{deleted} messages erased. Happy now?",
-            f"Done. I removed {deleted} messages from this mess."
+            f"Tch. {deleted_count} messages are gone.",
+            f"Cleaned up {deleted_count} messages. Try keeping things tidy.",
+            f"{deleted_count} messages erased. Happy now?",
+            f"Done. I removed {deleted_count} messages from this mess."
         ]
 
         await interaction.followup.send(
             random.choice(responses),
-            delete_after=5
+            ephemeral=True
         )
 
     except discord.Forbidden:
@@ -56,7 +43,8 @@ async def clear(
                 "I don't have permission to clean this place up.",
                 "Tch. Give me Manage Messages first.",
                 "My authority isn't enough to remove these messages."
-            ])
+            ]),
+            ephemeral=True
         )
 
     except discord.HTTPException:
@@ -65,9 +53,9 @@ async def clear(
                 "Something went wrong. The messages are still there.",
                 "Tch. Discord rejected the cleanup.",
                 "The operation failed. Try again."
-            ])
+            ]),
+            ephemeral=True
         )
-
 
 def setup(bot):
     bot.tree.add_command(clear)
