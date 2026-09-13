@@ -4,25 +4,22 @@ import mycord
 db = mycord.DB()
 
 
-def unclaim_character(guild_id, character_name, user_id):
+def unclaim_character(guild_id, user_id):
     existing = db.fetchone(
         "character_claims",
-        "guild_id = ? AND character_name = ?",
-        (guild_id, character_name)
+        "guild_id = ? AND claimed_by = ?",
+        (guild_id, user_id)
     )
 
     if existing is None:
-        return False
+        return None
 
-    claimed_by = existing[2]
-
-    if claimed_by != user_id:
-        return False
+    character_name = existing[1]
 
     db.delete(
         "character_claims",
-        "guild_id = ? AND character_name = ?",
-        (guild_id, character_name)
+        "guild_id = ? AND claimed_by = ?",
+        (guild_id, user_id)
     )
 
-    return True
+    return character_name
