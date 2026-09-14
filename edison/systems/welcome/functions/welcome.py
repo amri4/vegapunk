@@ -3,6 +3,18 @@ import discord
 
 db = mycord.DB()
 
+def ordinal(number):
+    if 10 <= number % 100 <= 20:
+        suffix = "th"
+    else:
+        suffix = {
+            1: "st",
+            2: "nd",
+            3: "rd"
+        }.get(number % 10, "th")
+
+    return f"{number:,}{suffix}"
+
 
 async def on_member_join(member):
     welcome = db.fetchone(
@@ -18,7 +30,8 @@ async def on_member_join(member):
         title=f"Welcome to {member.guild.name}",
         description="**The seas have gained another pirate!**\n Welcome aboard! Your adventure starts here."
     )
-    embed.set_footer(text=f"You're the {member.guild.member_count}th member in this server'")
+    member_count = member.guild.member_count
+    embed.set_footer(text=f"You're the {ordinal(member_count)} member in this server'")
 
     channel_id = welcome[1]
 
