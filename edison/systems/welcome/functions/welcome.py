@@ -13,6 +13,12 @@ async def on_member_join(member):
     if welcome is None:
         return
 
+    embed = discord.Embed(
+        title=f"Welcome to {guild.name}",
+        description="**The seas have gained another pirate!**\n Welcome aboard! Your adventure starts here."
+    )
+    embed.set_footer(text=f"You're the {member.guild.member_count}'s member in this server'")
+
     channel_id = welcome[1]
 
     channel = member.guild.get_channel(channel_id)
@@ -20,8 +26,8 @@ async def on_member_join(member):
     if channel is None:
         return
 
-    await channel.send(
-        f"👋 Welcome {member.mention} to **{member.guild.name}**!"
+    await channel.response.send_message(
+        embed=embed
     )
 
 
