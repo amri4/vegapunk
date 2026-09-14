@@ -13,7 +13,7 @@ class Bot(commands.Bot):
             command_prefix="Edison ",
             intents=discord.Intents.all(),
             help_command=None,
-            application_id=int(os.getenv("ATLAS_APPLICATION_ID"))
+            application_id=int(os.getenv("EDISON_APPLICATION_ID"))
         )
 
     async def setup_hook(self):
