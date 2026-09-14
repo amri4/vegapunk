@@ -1,4 +1,5 @@
 import mycord
+import discord
 
 db = mycord.DB()
 
@@ -14,10 +15,10 @@ async def on_member_join(member):
         return
 
     embed = discord.Embed(
-        title=f"Welcome to {guild.name}",
+        title=f"Welcome to {member.guild.name}",
         description="**The seas have gained another pirate!**\n Welcome aboard! Your adventure starts here."
     )
-    embed.set_footer(text=f"You're the {member.guild.member_count}'s member in this server'")
+    embed.set_footer(text=f"You're the {member.guild.member_count}th member in this server'")
 
     channel_id = welcome[1]
 
@@ -26,7 +27,7 @@ async def on_member_join(member):
     if channel is None:
         return
 
-    await channel.response.send_message(
+    await channel.send(
         embed=embed
     )
 
