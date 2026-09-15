@@ -49,7 +49,8 @@ class VerifyButton(
 
         if role in interaction.user.roles:
             await interaction.response.send_message(
-                "You're already verified."
+                "You're already verified.",
+                ephemeral=True
             )
             return
 
@@ -60,7 +61,8 @@ class VerifyButton(
             )
 
             await interaction.response.send_message(
-                "✅ Verification complete. Welcome to the server."
+                "✅ Verification complete. Welcome to the server.",
+                ephemeral=True
             )
 
         except discord.Forbidden:
