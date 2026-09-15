@@ -1,8 +1,6 @@
 import discord
 from discord import app_commands
 
-from ..functions.find_category import find_category
-
 
 @app_commands.command(
     name="addchannel",
@@ -14,25 +12,16 @@ from ..functions.find_category import find_category
 )
 async def addchannel(
     interaction: discord.Interaction,
-    category: str,
+    category: discord.CategoryChannel,
     name: str
 ):
-    category_obj, error = find_category(
-        interaction.guild,
-        category
-    )
-
-    if error:
-        await interaction.response.send_message(error, ephemeral=True)
-        return
-
     channel = await interaction.guild.create_text_channel(
         name=name,
-        category=category_obj
+        category=category
     )
 
     await interaction.response.send_message(
-        f"✅ Created {channel.mention} in **{category_obj.name}**."
+        f"✅ Created {channel.mention} in **{category.name}**."
     )
 
 
