@@ -1,7 +1,7 @@
 import discord
 import mycord
 
-from .colors import parse_role_color
+from utils.role_colors import parse_role_color
 
 
 db = mycord.DB()
