@@ -28,7 +28,7 @@ async def on_member_join(member):
 
     embed = discord.Embed(
         title=f"Welcome to {member.guild.name}",
-        description="**The seas have gained another pirate!**\n Welcome aboard! Your adventure starts here."
+        description=f"{member.mention}\n **The seas have gained another pirate!**\n Welcome aboard! Your adventure starts here."
     )
     member_count = member.guild.member_count
     embed.set_footer(text=f"You're the {ordinal(member_count)} member in this server'")
