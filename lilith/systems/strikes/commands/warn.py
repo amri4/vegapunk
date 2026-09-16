@@ -3,7 +3,7 @@ from discord import app_commands
 
 from ..functions.add_strike import add_strike
 from ..functions.prison import imprison
-from ..ids import STRIKE_CHANNEL_ID
+from ..ids import STRIKE_CHANNEL_ID, PRISON_ROLE_ID
 
 
 @app_commands.command(
@@ -25,9 +25,18 @@ async def warn(
         member.id
     )
 
-    channel = interaction.guild.get_channel(STRIKE_CHANNEL_ID)
+    channel = interaction.guild.get_channel(
+        STRIKE_CHANNEL_ID
+    )
 
     if strikes >= 5:
+        role = interaction.guild.get_role(
+            PRISON_ROLE_ID
+        )
+
+        if role is not None:
+            await member.add_roles(role)
+
         imprison(
             interaction.guild.id,
             member.id,
@@ -39,6 +48,7 @@ async def warn(
             f"{member.mention} has been sent to prison for **24 hours**.\n"
             f"**Reason:** {reason}"
         )
+
     else:
         message = (
             f"⚠️ **Strike {strikes}/5**\n"
