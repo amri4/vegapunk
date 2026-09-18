@@ -7,12 +7,8 @@ db = mycord.DB()
 db.create_table(
     "shop",
     """
-    item_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    description TEXT NOT NULL,
-    price INTEGER NOT NULL,
+    item_id TEXT PRIMARY KEY,
     channel_id INTEGER NOT NULL,
-    message_id INTEGER NOT NULL,
-    reward_type TEXT NOT NULL
+    message_id INTEGER NOT NULL
     """
 )
