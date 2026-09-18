@@ -35,9 +35,9 @@ class ConfirmButton(discord.ui.Button):
         if berries < price:
             await interaction.response.edit_message(
                 content=(
-                    f"❌ You need **{price:,} 🍓** to buy "
+                    f"❌ You need **{price:,} <:berries:1550458400800776344>** to buy "
                     f"**{self.item['title']}**.\n"
-                    f"You only have **{berries:,} 🍓**."
+                    f"You only have **{berries:,} <:berries:1550458400800776344>**."
                 ),
                 embed=None,
                 view=None
