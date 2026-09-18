@@ -1,105 +1,44 @@
 import discord
 
-from ..functions.shop import get_item
-from ..functions.items import bounty
-from ...berries.functions.berries import get_berries, remove_berries
+from ..buttons.confirm import ConfirmButton
+from ..buttons.cancel import CancelButton
 
 
-ITEM_FUNCTIONS = {
-    "bounty": bounty
-}
-
-
-class ConfirmButton(discord.ui.Button):
+class ConfirmView(discord.ui.View):
 
     def __init__(
         self,
-        item_id,
+        item,
         user_id
     ):
         super().__init__(
-            label="Confirm",
-            style=discord.ButtonStyle.success
+            timeout=60
         )
 
-        self.item_id = item_id
+        self.item = item
         self.user_id = user_id
 
-    async def callback(
-        self,
-        interaction: discord.Interaction
-    ):
-        if interaction.user.id != self.user_id:
-            await interaction.response.send_message(
-                "❌ This isn't your purchase.",
-                ephemeral=True
+        self.add_item(
+            ConfirmButton(
+                item,
+                user_id
             )
-            return
-
-        item = get_item(
-            self.item_id
         )
 
-        if item is None:
-            await interaction.response.edit_message(
-                content="❌ This item no longer exists.",
-                embed=None,
-                view=None
+        self.add_item(
+            CancelButton(
+                user_id
             )
-            return
-
-        title = item[1]
-        price = item[3]
-        item_type = item[6]
-
-        item_function = ITEM_FUNCTIONS.get(
-            item_type
         )
 
-        if item_function is None:
-            await interaction.response.edit_message(
-                content="❌ This item is not available right now.",
-                embed=None,
-                view=None
-            )
-            return
 
-        berries = get_berries(
-            interaction.guild.id,
-            interaction.user.id
+def confirmation_embed(item):
+    return discord.Embed(
+        title="🛒 Confirm Purchase",
+        description=(
+            f"**{item['title']}**\n\n"
+            f"{item['description']}\n\n"
+            f"**Price:** {item['price']:,} 🍓\n\n"
+            "Are you sure you want to buy this?"
         )
-
-        if berries < price:
-            await interaction.response.edit_message(
-                content=(
-                    f"❌ You need **{price:,} 🍓** to buy "
-                    f"**{title}**.\n"
-                    f"You only have **{berries:,} 🍓**."
-                ),
-                embed=None,
-                view=None
-            )
-            return
-
-        if not remove_berries(
-            interaction.guild.id,
-            interaction.user.id,
-            price
-        ):
-            await interaction.response.edit_message(
-                content="❌ You don't have enough berries.",
-                embed=None,
-                view=None
-            )
-            return
-
-        response = item_function(
-            interaction,
-            price
-        )
-
-        await interaction.response.edit_message(
-            content=response,
-            embed=None,
-            view=None
-        )
+    )
