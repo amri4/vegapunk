@@ -19,19 +19,21 @@ async def sync_shop(bot):
 
     saved_items = get_items()
 
-    # Remove items that no longer exist in items.py
+    # Remove items that no longer exist
     for saved in saved_items:
         item_id = saved[0]
+        channel_id = saved[1]
+        message_id = saved[2]
 
         if item_id in current_item_ids:
             continue
 
-        channel = bot.get_channel(saved[1])
+        channel = bot.get_channel(channel_id)
 
         if channel is not None:
             try:
                 message = await channel.fetch_message(
-                    saved[2]
+                    message_id
                 )
 
                 await message.delete()
@@ -39,15 +41,11 @@ async def sync_shop(bot):
             except discord.NotFound:
                 pass
 
-        remove_item(
-            item_id
-        )
+        remove_item(item_id)
 
-    # Create or update current items
+    # Sync current items
     for item in SHOP_ITEMS:
-        saved = get_item(
-            item["id"]
-        )
+        saved = get_item(item["id"])
 
         channel = bot.get_channel(
             item["channel_id"]
@@ -60,13 +58,11 @@ async def sync_shop(bot):
             title=item["title"],
             description=(
                 f"{item['description']}\n\n"
-                f"**Price:** {item['price']:,} 🍓"
+                f"**Price:** {item['price']:,} <:berries:1550458400800776344>"
             )
         )
 
-        view = ShopView(
-            item
-        )
+        view = ShopView(item)
 
         if saved is None:
             message = await channel.send(
