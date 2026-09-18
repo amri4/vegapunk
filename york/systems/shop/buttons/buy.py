@@ -1,15 +1,11 @@
 import discord
 
-from ..items import SHOP_ITEMS
 from ..views.confirm import ConfirmView, confirmation_embed
 
 
 class BuyButton(discord.ui.Button):
 
-    def __init__(
-        self,
-        item
-    ):
+    def __init__(self, item):
         super().__init__(
             label="Buy",
             style=discord.ButtonStyle.success,
@@ -18,10 +14,7 @@ class BuyButton(discord.ui.Button):
 
         self.item = item
 
-    async def callback(
-        self,
-        interaction: discord.Interaction
-    ):
+    async def callback(self, interaction):
         view = ConfirmView(
             self.item,
             interaction.user.id
