@@ -70,7 +70,7 @@ async def sync_shop(bot, guild):
             title=item["title"],
             description=(
                 f"{item['description']}\n\n"
-                f"**Price:** {item['price']:,} 🍓"
+                f"**Price:** {item['price']:,} <:berries:1550458400800776344>"
             )
         )
 
