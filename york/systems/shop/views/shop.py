@@ -5,10 +5,8 @@ from ..functions.shop import get_items
 
 
 class ShopView(discord.ui.View):
-    def __init__(
-        self,
-        item_id
-    ):
+
+    def __init__(self, item_id):
         super().__init__(
             timeout=None
         )
@@ -18,9 +16,7 @@ class ShopView(discord.ui.View):
         )
 
 
-def setup(
-    bot
-):
+def setup(bot):
     for item in get_items():
         item_id = item[0]
 
