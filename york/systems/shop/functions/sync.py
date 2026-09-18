@@ -5,64 +5,80 @@ from .shop import (
     add_item,
     get_item,
     get_items,
+    get_shop_channel,
     remove_item,
     update_message_id
 )
 from ..views.shop import ShopView
 
 
-async def sync_shop(bot):
+async def sync_shop(bot, guild):
+    channel_id = get_shop_channel(
+        guild.id
+    )
+
+    if channel_id is None:
+        return
+
+    channel = guild.get_channel(
+        channel_id
+    )
+
+    if channel is None:
+        return
+
     current_item_ids = {
         item["id"]
         for item in SHOP_ITEMS
     }
 
-    saved_items = get_items()
+    saved_items = get_items(
+        guild.id
+    )
 
     # Remove items that no longer exist
     for saved in saved_items:
         item_id = saved[0]
-        channel_id = saved[1]
-        message_id = saved[2]
+
+        if item_id == "__channel__":
+            continue
 
         if item_id in current_item_ids:
             continue
 
-        channel = bot.get_channel(channel_id)
+        try:
+            message = await channel.fetch_message(
+                saved[3]
+            )
 
-        if channel is not None:
-            try:
-                message = await channel.fetch_message(
-                    message_id
-                )
+            await message.delete()
 
-                await message.delete()
+        except discord.NotFound:
+            pass
 
-            except discord.NotFound:
-                pass
-
-        remove_item(item_id)
-
-    # Sync current items
-    for item in SHOP_ITEMS:
-        saved = get_item(item["id"])
-
-        channel = bot.get_channel(
-            item["channel_id"]
+        remove_item(
+            item_id,
+            guild.id
         )
 
-        if channel is None:
-            continue
+    # Create or update current items
+    for item in SHOP_ITEMS:
+        saved = get_item(
+            item["id"],
+            guild.id
+        )
 
         embed = discord.Embed(
             title=item["title"],
             description=(
                 f"{item['description']}\n\n"
-                f"**Price:** {item['price']:,} <:berries:1550458400800776344>"
+                f"**Price:** {item['price']:,} 🍓"
             )
         )
 
-        view = ShopView(item)
+        view = ShopView(
+            item
+        )
 
         if saved is None:
             message = await channel.send(
@@ -72,17 +88,16 @@ async def sync_shop(bot):
 
             add_item(
                 item["id"],
+                guild.id,
                 channel.id,
                 message.id
             )
 
             continue
 
-        message_id = saved[2]
-
         try:
             message = await channel.fetch_message(
-                message_id
+                saved[3]
             )
 
         except discord.NotFound:
@@ -93,6 +108,7 @@ async def sync_shop(bot):
 
             update_message_id(
                 item["id"],
+                guild.id,
                 message.id
             )
 
@@ -102,7 +118,3 @@ async def sync_shop(bot):
             embed=embed,
             view=view
         )
-
-
-async def setup(bot):
-    await sync_shop(bot)
