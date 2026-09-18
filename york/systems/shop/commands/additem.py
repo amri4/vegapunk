@@ -54,7 +54,7 @@ async def additem(
         title=title,
         description=(
             f"{description}\n\n"
-            f"**Price:** {price:,} 🍓"
+            f"**Price:** {price:,} <:berries:1550458400800776344>"
         )
     )
 
