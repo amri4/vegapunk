@@ -1,9 +1,11 @@
 import discord
 
 from ..functions.shop import get_item
+from ..views.confirm import ConfirmView, confirmation_embed
 
 
 class BuyButton(discord.ui.Button):
+
     def __init__(
         self,
         item_id
@@ -31,10 +33,13 @@ class BuyButton(discord.ui.Button):
             )
             return
 
-        title = item[1]
-        price = item[3]
+        view = ConfirmView(
+            self.item_id,
+            interaction.user.id
+        )
 
         await interaction.response.send_message(
-            f"🛒 You selected **{title}** for **{price:,} 🍓**.",
+            embed=confirmation_embed(item),
+            view=view,
             ephemeral=True
         )
