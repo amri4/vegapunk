@@ -1,4 +1,4 @@
-from ....Shaka.systems.bounty.functions.bounty import add_bounty
+from .....shaka.systems.bounty.functions.bounty import add_bounty
 
 
 def bounty(interaction, amount):
@@ -12,5 +12,5 @@ def bounty(interaction, amount):
 
     return (
         f"🏴‍☠️ You received **{bounty_amount:,} bounty** "
-        f"for **{amount:,} 🍓**!"
+        f"for **{amount:,} <:berries:1550458400800776344>**!"
     )
