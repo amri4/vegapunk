@@ -1,15 +1,14 @@
 import discord
 
-from ...berries.functions.berries import get_berries, remove_berries
+from ...berries.functions.berries import (
+    get_berries,
+    remove_berries
+)
 
 
 class ConfirmButton(discord.ui.Button):
 
-    def __init__(
-        self,
-        item,
-        user_id
-    ):
+    def __init__(self, item, user_id):
         super().__init__(
             label="Confirm",
             style=discord.ButtonStyle.success
@@ -18,10 +17,7 @@ class ConfirmButton(discord.ui.Button):
         self.item = item
         self.user_id = user_id
 
-    async def callback(
-        self,
-        interaction: discord.Interaction
-    ):
+    async def callback(self, interaction):
         if interaction.user.id != self.user_id:
             await interaction.response.send_message(
                 "❌ This isn't your purchase.",
@@ -39,9 +35,9 @@ class ConfirmButton(discord.ui.Button):
         if berries < price:
             await interaction.response.edit_message(
                 content=(
-                    f"❌ You need **{price:,} <:berries:1550458400800776344>** to buy "
+                    f"❌ You need **{price:,} 🍓** to buy "
                     f"**{self.item['title']}**.\n"
-                    f"You only have **{berries:,} <:berries:1550458400800776344>**."
+                    f"You only have **{berries:,} 🍓**."
                 ),
                 embed=None,
                 view=None
