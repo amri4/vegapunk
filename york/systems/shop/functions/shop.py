@@ -8,29 +8,39 @@ def add_item(
     title,
     description,
     price,
-    channel_id
+    channel_id,
+    reward_type
 ):
     db.insert(
         "shop",
-        "title, description, price, channel_id, message_id",
+        "title, description, price, channel_id, message_id, reward_type",
         (
             title,
             description,
             price,
             channel_id,
-            0
+            0,
+            reward_type
         )
     )
 
     item = db.fetchone(
         "shop",
-        "title = ? AND description = ? AND price = ? AND channel_id = ? AND message_id = ?",
+        """
+        title = ?
+        AND description = ?
+        AND price = ?
+        AND channel_id = ?
+        AND message_id = ?
+        AND reward_type = ?
+        """,
         (
             title,
             description,
             price,
             channel_id,
-            0
+            0,
+            reward_type
         )
     )
 
