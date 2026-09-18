@@ -2,6 +2,8 @@ import random
 
 import discord
 
+from ..berries.functions.berries import add_berries
+
 
 class MysteryButton(discord.ui.Button):
     def __init__(self, position, reward):
@@ -34,6 +36,14 @@ class MysteryButton(discord.ui.Button):
             self.label = view.reward_emojis[self.reward]
             self.style = discord.ButtonStyle.success
             view.found += 1
+
+            if self.reward == "berries":
+                add_berries(
+                    interaction.guild.id,
+                    interaction.user.id,
+                    100
+                )
+
         else:
             self.label = "❌"
             self.style = discord.ButtonStyle.danger
