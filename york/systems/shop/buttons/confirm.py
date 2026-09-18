@@ -38,7 +38,7 @@ def confirmation_embed(item):
         description=(
             f"**{item['title']}**\n\n"
             f"{item['description']}\n\n"
-            f"**Price:** {item['price']:,} 🍓\n\n"
+            f"**Price:** {item['price']:,} <:berries:1550458400800776344>\n\n"
             "Are you sure you want to buy this?"
         )
     )
