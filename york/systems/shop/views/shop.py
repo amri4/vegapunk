@@ -18,7 +18,7 @@ class ShopView(discord.ui.View):
         )
 
 
-def setup_shop_views(
+def setup(
     bot
 ):
     for item in get_items():
