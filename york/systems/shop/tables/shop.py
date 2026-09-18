@@ -7,8 +7,10 @@ db = mycord.DB()
 db.create_table(
     "shop",
     """
-    item_id TEXT PRIMARY KEY,
-    channel_id INTEGER NOT NULL,
-    message_id INTEGER NOT NULL
+    item_id TEXT,
+    guild_id INTEGER,
+    channel_id INTEGER,
+    message_id INTEGER,
+    PRIMARY KEY (item_id, guild_id)
     """
 )
