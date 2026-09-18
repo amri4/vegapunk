@@ -19,3 +19,6 @@ async def berries(
     await interaction.response.send_message(
         f"🍓 You have **{amount:,} berries**."
     )
+
+def setup(bot):
+    bot.tree.add_command(berries)
