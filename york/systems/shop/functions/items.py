@@ -1,5 +1,4 @@
-from .....shaka.systems.bounty.functions.bounty import add_bounty
-
+from shaka.systems.bounty.functions.bounty import add_bounty
 
 def bounty(interaction, amount):
     bounty_amount = amount * 10
