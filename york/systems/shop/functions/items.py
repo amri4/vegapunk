@@ -1,16 +1,12 @@
-from ....shaka.functions.bounty import add_bounty
+from .functions.items import bounty
 
 
-def bounty(interaction, amount):
-    bounty_amount = amount * 10
-
-    add_bounty(
-        interaction.guild.id,
-        interaction.user.id,
-        bounty_amount
-    )
-
-    return (
-        f"🏴‍☠️ You received **{bounty_amount:,} bounty** "
-        f"for **{amount:,} 🍓**!"
-    )
+SHOP_ITEMS = [
+    {
+        "id": "bounty",
+        "title": "Bounty",
+        "description": "Exchange berries for bounty.",
+        "price": 100,
+        "function": bounty
+    }
+]
