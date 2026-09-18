@@ -6,11 +6,7 @@ from ..buttons.cancel import CancelButton
 
 class ConfirmView(discord.ui.View):
 
-    def __init__(
-        self,
-        item,
-        user_id
-    ):
+    def __init__(self, item, user_id):
         super().__init__(
             timeout=60
         )
