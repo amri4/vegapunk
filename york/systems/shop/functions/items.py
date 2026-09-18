@@ -1,4 +1,4 @@
-from ....shaka.functions.bounty import add_bounty
+from ....Shaka.systems.bounty.functions.bounty import add_bounty
 
 
 def bounty(interaction, amount):
