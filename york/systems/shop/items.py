@@ -1,4 +1,3 @@
-from .ids import SHOP_CHANNEL_ID
 from .functions.items import bounty
 
 
