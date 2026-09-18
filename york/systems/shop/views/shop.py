@@ -7,10 +7,7 @@ from ..functions.shop import get_items
 
 class ShopView(discord.ui.View):
 
-    def __init__(
-        self,
-        item
-    ):
+    def __init__(self, item):
         super().__init__(
             timeout=None
         )
