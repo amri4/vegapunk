@@ -38,10 +38,11 @@ class MysteryButton(discord.ui.Button):
             view.found += 1
 
             if self.reward == "berries":
+                berry_reward = random.randint(50, 250)
                 add_berries(
                     interaction.guild.id,
                     interaction.user.id,
-                    100
+                    berry_reward
                 )
 
         else:
