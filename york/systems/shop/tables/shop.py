@@ -12,6 +12,7 @@ db.create_table(
     description TEXT NOT NULL,
     price INTEGER NOT NULL,
     channel_id INTEGER NOT NULL,
-    message_id INTEGER NOT NULL
+    message_id INTEGER NOT NULL,
+    reward_type TEXT NOT NULL
     """
 )
