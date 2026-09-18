@@ -18,14 +18,14 @@ async def sync_shop(bot, guild):
     )
 
     if channel_id is None:
-        return
+        return False
 
     channel = guild.get_channel(
         channel_id
     )
 
     if channel is None:
-        return
+        return False
 
     current_item_ids = {
         item["id"]
@@ -36,7 +36,6 @@ async def sync_shop(bot, guild):
         guild.id
     )
 
-    # Remove items that no longer exist
     for saved in saved_items:
         item_id = saved[0]
 
@@ -61,7 +60,6 @@ async def sync_shop(bot, guild):
             guild.id
         )
 
-    # Create or update current items
     for item in SHOP_ITEMS:
         saved = get_item(
             item["id"],
@@ -118,3 +116,5 @@ async def sync_shop(bot, guild):
             embed=embed,
             view=view
         )
+
+    return True
