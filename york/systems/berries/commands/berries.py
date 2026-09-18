@@ -15,7 +15,7 @@ async def berries(
         interaction.guild.id,
         interaction.user.id
     )
-    emoji = <:berries:1550458400800776344>
+    emoji = "<:berries:1550458400800776344>"
 
     await interaction.response.send_message(
         f"{emoji} You have **{amount:,} berries**."
