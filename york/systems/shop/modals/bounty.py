@@ -1,24 +1,22 @@
 import discord
 
-from ..functions.items import bounty
-
 
 class BountyModal(discord.ui.Modal, title="Buy Bounty"):
 
     amount = discord.ui.TextInput(
         label="Berry amount",
-        placeholder="Enter how many berries you want to spend",
+        placeholder="How many berries do you want to spend?",
         required=True,
         min_length=1,
         max_length=10
     )
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
         try:
             amount = int(self.amount.value)
         except ValueError:
             await interaction.response.send_message(
-                "❌ Please enter a whole number.",
+                "❌ Enter a whole number.",
                 ephemeral=True
             )
             return
@@ -30,7 +28,7 @@ class BountyModal(discord.ui.Modal, title="Buy Bounty"):
             )
             return
 
-        response = bounty(
+        response = self.item["function"](
             interaction,
             amount
         )
