@@ -103,5 +103,3 @@ def remove_item(
             guild_id
         )
     )
-
-Now "/syncshop" should get past that DB error.
