@@ -15,9 +15,9 @@ class BuyButton(discord.ui.Button):
         self.item = item
 
     async def callback(self, interaction):
-        if self.item.get("variable", False):
+        if self.item.get("type") == "variable":
             await interaction.response.send_modal(
-                BountyModal()
+                BountyModal(self.item)
             )
             return
 
