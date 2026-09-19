@@ -6,7 +6,7 @@ SHOP_ITEMS = [
         "id": "bounty",
         "title": "Bounty",
         "description": "Exchange berries for bounty.",
-        "price": 100,
+        "variable": True,
         "function": bounty
     }
 ]
