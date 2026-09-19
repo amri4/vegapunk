@@ -1,15 +1,24 @@
 import discord
 
 
-class BountyModal(discord.ui.Modal, title="Buy Bounty"):
+class BountyModal(discord.ui.Modal):
 
-    amount = discord.ui.TextInput(
-        label="Berry amount",
-        placeholder="How many berries do you want to spend?",
-        required=True,
-        min_length=1,
-        max_length=10
-    )
+    def __init__(self, item):
+        super().__init__(
+            title="Buy Bounty"
+        )
+
+        self.item = item
+
+        self.amount = discord.ui.TextInput(
+            label="Berry amount",
+            placeholder="How many berries do you want to spend?",
+            required=True,
+            min_length=1,
+            max_length=10
+        )
+
+        self.add_item(self.amount)
 
     async def on_submit(self, interaction):
         try:
