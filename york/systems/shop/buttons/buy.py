@@ -1,10 +1,10 @@
 import discord
 
 from ..views.confirm import ConfirmView, confirmation_embed
+from ..modals.bounty import BountyModal
 
 
 class BuyButton(discord.ui.Button):
-
     def __init__(self, item):
         super().__init__(
             label="Buy",
@@ -15,15 +15,19 @@ class BuyButton(discord.ui.Button):
         self.item = item
 
     async def callback(self, interaction):
+        if self.item.get("variable", False):
+            await interaction.response.send_modal(
+                BountyModal()
+            )
+            return
+
         view = ConfirmView(
             self.item,
             interaction.user.id
         )
 
         await interaction.response.send_message(
-            embed=confirmation_embed(
-                self.item
-            ),
+            embed=confirmation_embed(self.item),
             view=view,
             ephemeral=True
         )
