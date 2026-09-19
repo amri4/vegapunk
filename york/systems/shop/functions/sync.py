@@ -66,11 +66,17 @@ async def sync_shop(bot, guild):
             guild.id
         )
 
+        if item.get("type") == "variable":
+            price = "Choose amount"
+        else:
+            price = f"{item['price']:,}"
+
         embed = discord.Embed(
             title=item["title"],
             description=(
                 f"{item['description']}\n\n"
-                f"**Price:** {item['price']:,} <:berries:1550458400800776344>"
+                f"**Price:** {price} "
+                f"<:berries:1550458400800776344>"
             )
         )
 
