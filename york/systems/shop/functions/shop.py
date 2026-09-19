@@ -63,11 +63,15 @@ def get_item(item_id, guild_id):
 
 
 def get_items(guild_id):
-    return db.fetchall(
-        "shop",
-        "guild_id = ?",
-        (guild_id,)
+    items = db.fetchall(
+        "shop"
     )
+
+    return [
+        item
+        for item in items
+        if item[1] == guild_id
+    ]
 
 
 def update_message_id(
@@ -87,7 +91,10 @@ def update_message_id(
     )
 
 
-def remove_item(item_id, guild_id):
+def remove_item(
+    item_id,
+    guild_id
+):
     db.delete(
         "shop",
         "item_id = ? AND guild_id = ?",
@@ -96,3 +103,5 @@ def remove_item(item_id, guild_id):
             guild_id
         )
     )
+
+Now "/syncshop" should get past that DB error.
