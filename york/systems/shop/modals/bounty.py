@@ -18,11 +18,15 @@ class BountyModal(discord.ui.Modal):
             max_length=10
         )
 
-        self.add_item(self.amount)
+        self.add_item(
+            self.amount
+        )
 
     async def on_submit(self, interaction):
         try:
-            amount = int(self.amount.value)
+            amount = int(
+                self.amount.value
+            )
         except ValueError:
             await interaction.response.send_message(
                 "❌ Enter a whole number.",
