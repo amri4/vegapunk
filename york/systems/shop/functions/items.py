@@ -1,6 +1,6 @@
 from shaka.systems.bounty.functions.add_bounty import add_bounty
 
-from ..berries.functions.berries import (
+from ...berries.functions.berries import (
     get_berries,
     remove_berries
 )
