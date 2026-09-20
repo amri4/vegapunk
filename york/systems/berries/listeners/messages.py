@@ -2,6 +2,7 @@ import random
 import time
 
 from ..functions.berries import add_berries
+from ..functions.berry_rush import is_rush_active
 
 
 COOLDOWN = 5
@@ -37,6 +38,9 @@ async def on_message(message):
         1,
         5
     )
+
+    if is_rush_active():
+        amount *= 2
 
     add_berries(
         message.guild.id,
