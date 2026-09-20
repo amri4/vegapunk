@@ -21,7 +21,7 @@ async def start_berry_rush(bot, channel_id):
             title="💰 BERRY RUSH!",
             description=(
                 "The seas are overflowing with berries!\n\n"
-                "🍓 **All message earnings are now ×2!**\n"
+                f"<:berries:1550458400800776344> **All message earnings are now ×2!**\n"
                 "⏰ The rush lasts for **30 minutes**."
             ),
             color=discord.Color.gold()
