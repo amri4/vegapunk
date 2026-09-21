@@ -1,6 +1,7 @@
 from .functions.trades import get_trades
-from ..views.respond import TradeRespondView
-from ..views.trade import TradeView
+
+from .views.respond import TradeRespondView
+from .views.trade import TradeView
 
 
 def setup(bot):
@@ -12,11 +13,17 @@ def setup(bot):
         status = trade[4]
 
         if status == "pending":
+
             bot.add_view(
-                TradeRespondView(trade_id)
+                TradeRespondView(
+                    trade_id
+                )
             )
 
         elif status == "accepted":
+
             bot.add_view(
-                TradeView(trade_id)
+                TradeView(
+                    trade_id
+                )
             )
