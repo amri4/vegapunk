@@ -5,6 +5,7 @@ from ..functions.trades import (
     update_trade_status
 )
 
+from ..functions.embed import create_trade_embed
 from ..views.trade import TradeView
 
 
@@ -51,15 +52,18 @@ class AcceptTradeButton(discord.ui.Button):
             "accepted"
         )
 
+        embed = create_trade_embed(
+            self.trade_id,
+            interaction.guild
+        )
+
         view = TradeView(
             self.trade_id
         )
 
         await interaction.response.edit_message(
-            content=(
-                f"🤝 Trade **#{self.trade_id}** accepted!\n"
-                "Add what you want to offer below."
-            ),
+            content=None,
+            embed=embed,
             view=view
         )
 
