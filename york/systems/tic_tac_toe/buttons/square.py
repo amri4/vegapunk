@@ -1,6 +1,7 @@
 import discord
 
 from ..functions.game import make_move, check_winner, game_over
+from ..functions.rewards import reward_winner, reward_draw
 
 
 class SquareButton(discord.ui.Button):
@@ -61,8 +62,30 @@ class SquareButton(discord.ui.Button):
             for button in view.children:
                 button.disabled = True
 
+            winner_id = (
+                view.player_x
+                if winner == "❌"
+                else view.player_o
+            )
+
+            loser_id = (
+                view.player_o
+                if winner == "❌"
+                else view.player_x
+            )
+
+            reward_winner(
+                interaction.guild.id,
+                winner_id,
+                loser_id
+            )
+
             await interaction.response.edit_message(
-                content=f"🏆 **{winner} wins!**",
+                content=(
+                    f"🏆 **{winner} wins!**\n\n"
+                    f"💰 Winner: **+500 berries**\n"
+                    f"💰 Loser: **+50 berries**"
+                ),
                 view=view
             )
             return
@@ -73,8 +96,17 @@ class SquareButton(discord.ui.Button):
             for button in view.children:
                 button.disabled = True
 
+            reward_draw(
+                interaction.guild.id,
+                view.player_x,
+                view.player_o
+            )
+
             await interaction.response.edit_message(
-                content="🤝 **It's a draw!**",
+                content=(
+                    "🤝 **It's a draw!**\n\n"
+                    "💰 Both players received **+150 berries**."
+                ),
                 view=view
             )
             return
@@ -84,4 +116,6 @@ class SquareButton(discord.ui.Button):
         else:
             view.current_player = view.player_x
 
-        await interaction.response.edit_message(view=view)
+        await interaction.response.edit_message(
+            view=view
+        )
