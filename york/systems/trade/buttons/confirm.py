@@ -1,11 +1,19 @@
 import discord
 
-from ..functions.trades import get_trade
+from ..functions.trades import (
+    get_trade,
+    update_trade_status
+)
+
 from ..functions.confirmations import (
     confirm_trade,
     is_confirmed,
-    get_confirmations
+    get_confirmations,
+    clear_confirmations
 )
+
+from ..functions.complete import complete_trade
+from ..functions.offers import remove_offers
 
 
 class ConfirmTradeButton(discord.ui.Button):
@@ -70,14 +78,45 @@ class ConfirmTradeButton(discord.ui.Button):
 
         if len(confirmations) < 2:
             await interaction.response.send_message(
-                "✅ You confirmed the trade. "
+                "✅ You confirmed the trade.\n"
                 "Waiting for the other person.",
                 ephemeral=True
             )
             return
 
-        await interaction.response.send_message(
-            "✅ Both users confirmed! "
-            "The trade is ready to be completed.",
-            ephemeral=True
+        completed = complete_trade(
+            trade
+        )
+
+        if not completed:
+            clear_confirmations(
+                self.trade_id
+            )
+
+            await interaction.response.send_message(
+                "❌ The trade could not be completed.\n"
+                "One or more offered items are no longer available.",
+                ephemeral=True
+            )
+            return
+
+        update_trade_status(
+            self.trade_id,
+            "completed"
+        )
+
+        clear_confirmations(
+            self.trade_id
+        )
+
+        remove_offers(
+            self.trade_id
+        )
+
+        await interaction.response.edit_message(
+            content=(
+                f"✅ Trade **#{self.trade_id}** completed!"
+            ),
+            embed=None,
+            view=None
         )
