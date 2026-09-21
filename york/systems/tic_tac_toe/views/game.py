@@ -18,3 +18,8 @@ class TicTacToeView(discord.ui.View):
 
         for position in range(9):
             self.add_item(SquareButton(position))
+
+    def get_turn_text(self):
+        if self.current_player == self.player_x:
+            return "❌"
+        return "⭕"
