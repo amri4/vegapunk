@@ -135,7 +135,7 @@ def get_inventory(
     ]
 
 
-    def remove_item_everywhere(item_id):
+def remove_item_everywhere(item_id):
     db.delete(
         "inventory",
         "item_id = ?",
