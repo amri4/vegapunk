@@ -7,7 +7,8 @@ class AddItemButton(discord.ui.Button):
     def __init__(self, trade_id):
         super().__init__(
             label="Add Item",
-            style=discord.ButtonStyle.primary
+            style=discord.ButtonStyle.primary,
+            custom_id=f"trade:add:{trade_id}"
         )
 
         self.trade_id = trade_id
@@ -17,7 +18,5 @@ class AddItemButton(discord.ui.Button):
         interaction: discord.Interaction
     ):
         await interaction.response.send_modal(
-            AddItemModal(
-                self.trade_id
-            )
+            AddItemModal(self.trade_id)
         )
