@@ -1,4 +1,4 @@
-from ..functions.trades import get_trades
+from .functions.trades import get_trades
 from ..views.respond import TradeRespondView
 from ..views.trade import TradeView
 
