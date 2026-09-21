@@ -1,5 +1,13 @@
 from ...berries.functions.berries import get_berries
-from .offers import add_offer
+
+from .offers import (
+    add_offer,
+    get_offer,
+    remove_offer,
+    update_offer
+)
+
+from .confirmations import clear_confirmations
 
 
 BERRIES_ITEM_ID = "berries"
@@ -24,6 +32,50 @@ def add_berries_to_trade(
         user_id,
         BERRIES_ITEM_ID,
         amount
+    )
+
+    clear_confirmations(
+        trade_id
+    )
+
+    return True
+
+
+def remove_berries_from_trade(
+    trade_id,
+    user_id,
+    amount
+):
+    offer = get_offer(
+        trade_id,
+        user_id,
+        BERRIES_ITEM_ID
+    )
+
+    if offer is None:
+        return False
+
+    current = offer[3]
+
+    if amount > current:
+        return False
+
+    if amount == current:
+        remove_offer(
+            trade_id,
+            user_id,
+            BERRIES_ITEM_ID
+        )
+    else:
+        update_offer(
+            trade_id,
+            user_id,
+            BERRIES_ITEM_ID,
+            current - amount
+        )
+
+    clear_confirmations(
+        trade_id
     )
 
     return True
