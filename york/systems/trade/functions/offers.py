@@ -76,3 +76,22 @@ def remove_offers(
         "trade_id = ?",
         (trade_id,)
     )
+
+
+    def update_offer(
+    trade_id,
+    user_id,
+    item_id,
+    amount
+):
+    db.update(
+        "trade_offers",
+        "amount = ?",
+        "trade_id = ? AND user_id = ? AND item_id = ?",
+        (
+            amount,
+            trade_id,
+            user_id,
+            item_id
+        )
+    )
