@@ -20,7 +20,8 @@ class ConfirmTradeButton(discord.ui.Button):
     def __init__(self, trade_id):
         super().__init__(
             label="Confirm",
-            style=discord.ButtonStyle.success
+            style=discord.ButtonStyle.success,
+            custom_id=f"trade:confirm:{trade_id}"
         )
 
         self.trade_id = trade_id
@@ -35,14 +36,14 @@ class ConfirmTradeButton(discord.ui.Button):
 
         if trade is None:
             await interaction.response.send_message(
-                "❌ This trade doesn't exist.",
+                "❌ This trade no longer exists.",
                 ephemeral=True
             )
             return
 
         if trade[4] != "accepted":
             await interaction.response.send_message(
-                "❌ This trade isn't open.",
+                "❌ This trade is no longer active.",
                 ephemeral=True
             )
             return
@@ -52,7 +53,7 @@ class ConfirmTradeButton(discord.ui.Button):
             trade[3]
         ):
             await interaction.response.send_message(
-                "❌ You aren't part of this trade.",
+                "❌ You are not part of this trade.",
                 ephemeral=True
             )
             return
@@ -114,9 +115,7 @@ class ConfirmTradeButton(discord.ui.Button):
         )
 
         await interaction.response.edit_message(
-            content=(
-                f"✅ Trade **#{self.trade_id}** completed!"
-            ),
+            content=f"✅ Trade **#{self.trade_id}** completed!",
             embed=None,
             view=None
         )
