@@ -117,5 +117,9 @@ class SquareButton(discord.ui.Button):
             view.current_player = view.player_x
 
         await interaction.response.edit_message(
+            content=(
+                f"❌ <@{view.player_x}> vs ⭕ <@{view.player_o}>\n\n"
+                f"🎮 **{view.get_turn_text()}'s turn!**"
+            ),
             view=view
         )
