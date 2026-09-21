@@ -3,6 +3,7 @@ import discord
 from ..functions.trades import get_trade
 from ..functions.offer import add_item_to_trade
 from ..functions.berries import add_berries_to_trade
+from ..functions.message import update_trade_message
 
 
 class AddItemModal(discord.ui.Modal):
@@ -88,6 +89,13 @@ class AddItemModal(discord.ui.Modal):
 
         item_id = self.item_id.value.strip()
 
+        if not item_id:
+            await interaction.response.send_message(
+                "❌ Enter an item ID.",
+                ephemeral=True
+            )
+            return
+
         if item_id.lower() == "berries":
             success = add_berries_to_trade(
                 self.trade_id,
@@ -110,6 +118,11 @@ class AddItemModal(discord.ui.Modal):
                 ephemeral=True
             )
             return
+
+        await update_trade_message(
+            interaction.message,
+            self.trade_id
+        )
 
         await interaction.response.send_message(
             f"✅ Added **{item_id} ×{amount}** "
