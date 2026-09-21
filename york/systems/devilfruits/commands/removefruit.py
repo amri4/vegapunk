@@ -1,7 +1,43 @@
 import discord
 from discord import app_commands
 
-from ..functions.fruits import get_fruit, remove_fruit
+from ..functions.fruits import (
+    get_fruit,
+    get_fruits,
+    remove_fruit
+)
+
+
+async def fruit_autocomplete(
+    interaction: discord.Interaction,
+    current: str
+):
+    fruits = get_fruits()
+
+    current = current.lower()
+
+    choices = []
+
+    for fruit in fruits:
+
+        fruit_id = fruit[0]
+        name = fruit[1]
+        emoji = fruit[2]
+
+        if current not in name.lower():
+            continue
+
+        choices.append(
+            app_commands.Choice(
+                name=f"{emoji} {name}",
+                value=fruit_id
+            )
+        )
+
+        if len(choices) >= 25:
+            break
+
+    return choices
 
 
 @app_commands.command(
@@ -11,26 +47,34 @@ from ..functions.fruits import get_fruit, remove_fruit
 @app_commands.default_permissions(
     manage_guild=True
 )
+@app_commands.autocomplete(
+    fruit=fruit_autocomplete
+)
 async def removefruit(
     interaction: discord.Interaction,
-    fruit_id: str
+    fruit: str
 ):
-    fruit = get_fruit(
-        fruit_id
+    fruit_data = get_fruit(
+        fruit
     )
 
-    if fruit is None:
+    if fruit_data is None:
         await interaction.response.send_message(
-            "❌ That Devil Fruit doesn't exist."
+            "❌ That Devil Fruit doesn't exist in the catalog.",
+            ephemeral=True
         )
         return
 
+    fruit_name = fruit_data[1]
+    fruit_emoji = fruit_data[2]
+
     remove_fruit(
-        fruit_id
+        fruit
     )
 
     await interaction.response.send_message(
-        f"✅ Removed **{fruit[1]}** from the Devil Fruit catalog."
+        f"✅ Removed {fruit_emoji} **{fruit_name}** "
+        "from the Devil Fruit catalog."
     )
 
 
