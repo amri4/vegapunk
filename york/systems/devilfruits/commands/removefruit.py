@@ -7,6 +7,10 @@ from ..functions.fruits import (
     remove_fruit
 )
 
+from ...inventory.functions.inventory import (
+    remove_item_everywhere
+)
+
 
 async def fruit_autocomplete(
     interaction: discord.Interaction,
@@ -72,9 +76,13 @@ async def removefruit(
         fruit
     )
 
+    remove_item_everywhere(
+        fruit
+    )
+
     await interaction.response.send_message(
         f"✅ Removed {fruit_emoji} **{fruit_name}** "
-        "from the Devil Fruit catalog."
+        "from the Devil Fruit catalog and all inventories."
     )
 
 
