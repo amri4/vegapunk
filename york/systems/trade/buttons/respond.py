@@ -13,7 +13,8 @@ class AcceptTradeButton(discord.ui.Button):
     def __init__(self, trade_id):
         super().__init__(
             label="Accept",
-            style=discord.ButtonStyle.success
+            style=discord.ButtonStyle.success,
+            custom_id=f"trade:accept:{trade_id}"
         )
 
         self.trade_id = trade_id
@@ -72,7 +73,8 @@ class DeclineTradeButton(discord.ui.Button):
     def __init__(self, trade_id):
         super().__init__(
             label="Decline",
-            style=discord.ButtonStyle.danger
+            style=discord.ButtonStyle.danger,
+            custom_id=f"trade:decline:{trade_id}"
         )
 
         self.trade_id = trade_id
