@@ -1,3 +1,5 @@
+import re
+
 import discord
 from discord import app_commands
 
@@ -11,6 +13,20 @@ RARITIES = [
     "Epic",
     "Legendary"
 ]
+
+
+def create_fruit_id(name):
+    fruit_id = name.lower()
+
+    fruit_id = re.sub(
+        r"[^a-z0-9]+",
+        "_",
+        fruit_id
+    )
+
+    fruit_id = fruit_id.strip("_")
+
+    return fruit_id
 
 
 @app_commands.command(
@@ -31,12 +47,15 @@ RARITIES = [
 )
 async def addfruit(
     interaction: discord.Interaction,
-    fruit_id: str,
     name: str,
     emoji: str,
     rarity: app_commands.Choice[str],
     sell_value: int
 ):
+    fruit_id = create_fruit_id(
+        name
+    )
+
     add_fruit(
         fruit_id,
         name,
