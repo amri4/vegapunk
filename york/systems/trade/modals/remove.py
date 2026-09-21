@@ -3,6 +3,7 @@ import discord
 from ..functions.trades import get_trade
 from ..functions.offer import remove_item_from_trade
 from ..functions.berries import remove_berries_from_trade
+from ..functions.message import update_trade_message
 
 
 class RemoveItemModal(discord.ui.Modal):
@@ -46,14 +47,14 @@ class RemoveItemModal(discord.ui.Modal):
 
         if trade is None:
             await interaction.response.send_message(
-                "❌ This trade doesn't exist.",
+                "❌ This trade no longer exists.",
                 ephemeral=True
             )
             return
 
         if trade[4] != "accepted":
             await interaction.response.send_message(
-                "❌ This trade isn't open for offers.",
+                "❌ This trade is no longer active.",
                 ephemeral=True
             )
             return
@@ -63,7 +64,7 @@ class RemoveItemModal(discord.ui.Modal):
             trade[3]
         ):
             await interaction.response.send_message(
-                "❌ You aren't part of this trade.",
+                "❌ You are not part of this trade.",
                 ephemeral=True
             )
             return
@@ -74,7 +75,7 @@ class RemoveItemModal(discord.ui.Modal):
             )
         except ValueError:
             await interaction.response.send_message(
-                "❌ Amount must be a whole number.",
+                "❌ Amount must be a number.",
                 ephemeral=True
             )
             return
@@ -87,6 +88,13 @@ class RemoveItemModal(discord.ui.Modal):
             return
 
         item_id = self.item_id.value.strip()
+
+        if not item_id:
+            await interaction.response.send_message(
+                "❌ Enter an item ID.",
+                ephemeral=True
+            )
+            return
 
         if item_id.lower() == "berries":
             success = remove_berries_from_trade(
@@ -104,13 +112,17 @@ class RemoveItemModal(discord.ui.Modal):
 
         if not success:
             await interaction.response.send_message(
-                "❌ You aren't offering that amount.",
+                "❌ You don't have that amount in your offer.",
                 ephemeral=True
             )
             return
 
+        await update_trade_message(
+            interaction.message,
+            self.trade_id
+        )
+
         await interaction.response.send_message(
-            f"✅ Removed **{item_id} ×{amount}** "
-            f"from the trade.",
+            f"✅ Removed **{item_id} ×{amount}** from the trade.",
             ephemeral=True
         )
