@@ -2,6 +2,7 @@ import discord
 from discord import app_commands
 
 from ...berries.functions.berries import get_berries
+from ...devilfruits.functions.fruits import get_fruit
 from ..functions.inventory import get_inventory
 
 
@@ -9,7 +10,9 @@ from ..functions.inventory import get_inventory
     name="inventory",
     description="View your inventory."
 )
-async def inventory(interaction: discord.Interaction):
+async def inventory(
+    interaction: discord.Interaction
+):
     guild_id = interaction.guild.id
     user_id = interaction.user.id
 
@@ -32,15 +35,33 @@ async def inventory(interaction: discord.Interaction):
 
     else:
         for item in items:
+
             item_id = item[2]
             amount = item[3]
 
-            description += (
-                f"• **{item_id}** ×{amount}\n"
+            fruit = get_fruit(
+                item_id
             )
 
+            if fruit is not None:
+
+                fruit_name = fruit[1]
+                fruit_emoji = fruit[2]
+
+                description += (
+                    f"• {fruit_emoji} **{fruit_name}** ×{amount}\n"
+                )
+
+            else:
+
+                description += (
+                    f"• **{item_id}** ×{amount}\n"
+                )
+
     embed = discord.Embed(
-        title=f"🎒 {interaction.user.display_name}'s Inventory",
+        title=(
+            f"🎒 {interaction.user.display_name}'s Inventory"
+        ),
         description=description
     )
 
