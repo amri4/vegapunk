@@ -2,6 +2,7 @@ import discord
 from discord import app_commands
 
 from ..functions.trades import create_trade
+from ..views.respond import TradeRespondView
 
 
 @app_commands.command(
@@ -32,8 +33,15 @@ async def trade(
         member.id
     )
 
+    view = TradeRespondView(
+        trade_id
+    )
+
     await interaction.response.send_message(
-        f"🤝 Trade **#{trade_id}** started with {member.mention}!"
+        f"{member.mention}, {interaction.user.mention} "
+        f"wants to trade with you!\n\n"
+        f"🤝 Trade **#{trade_id}**",
+        view=view
     )
 
 
