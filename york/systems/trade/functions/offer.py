@@ -4,12 +4,13 @@ from .offers import add_offer
 
 def add_item_to_trade(
     trade_id,
+    guild_id,
     user_id,
     item_id,
     amount
 ):
     current = get_amount(
-        None,
+        guild_id,
         user_id,
         item_id
     )
