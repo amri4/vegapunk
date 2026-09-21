@@ -5,7 +5,15 @@ from discord import app_commands
 
 from ..functions.fruits import get_fruits
 from ..functions.rarity import get_rarity_weight
+
 from ...inventory.functions.inventory import add_item
+from ...berries.functions.berries import (
+    get_berries,
+    remove_berries
+)
+
+
+ROLL_COST = 1000
 
 
 @app_commands.command(
@@ -15,6 +23,23 @@ from ...inventory.functions.inventory import add_item
 async def rollfruit(
     interaction: discord.Interaction
 ):
+    guild_id = interaction.guild.id
+    user_id = interaction.user.id
+
+    berries = get_berries(
+        guild_id,
+        user_id
+    )
+
+    if berries < ROLL_COST:
+        await interaction.response.send_message(
+            f"❌ You need **{ROLL_COST:,} berries** to roll a "
+            f"Devil Fruit.\n"
+            f"You currently have **{berries:,} berries**.",
+            ephemeral=True
+        )
+        return
+
     fruits = get_fruits()
 
     if not fruits:
@@ -51,9 +76,15 @@ async def rollfruit(
     emoji = fruit[2]
     rarity = fruit[3]
 
+    remove_berries(
+        guild_id,
+        user_id,
+        ROLL_COST
+    )
+
     add_item(
-        interaction.guild.id,
-        interaction.user.id,
+        guild_id,
+        user_id,
         fruit_id
     )
 
@@ -61,7 +92,8 @@ async def rollfruit(
         f"🎲 You rolled...\n\n"
         f"{emoji} **{name}**\n"
         f"✨ Rarity: **{rarity}**\n\n"
-        f"Added to your inventory! 🎒"
+        f"Added to your inventory! 🎒\n"
+        f"💰 Cost: **{ROLL_COST:,} berries**"
     )
 
 
