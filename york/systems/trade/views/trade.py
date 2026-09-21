@@ -3,6 +3,7 @@ import discord
 from ..buttons.add import AddItemButton
 from ..buttons.remove import RemoveItemButton
 from ..buttons.confirm import ConfirmTradeButton
+from ..buttons.cancel import CancelTradeButton
 
 
 class TradeView(discord.ui.View):
@@ -27,6 +28,12 @@ class TradeView(discord.ui.View):
 
         self.add_item(
             ConfirmTradeButton(
+                trade_id
+            )
+        )
+
+        self.add_item(
+            CancelTradeButton(
                 trade_id
             )
         )
