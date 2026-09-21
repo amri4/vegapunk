@@ -1,7 +1,8 @@
 import discord
 
 from ..functions.trades import get_trade
-from ..functions.offers import get_offer, remove_offer
+from ..functions.offer import remove_item_from_trade
+from ..functions.berries import remove_berries_from_trade
 
 
 class RemoveItemModal(discord.ui.Modal):
@@ -87,44 +88,26 @@ class RemoveItemModal(discord.ui.Modal):
 
         item_id = self.item_id.value.strip()
 
-        offer = get_offer(
-            self.trade_id,
-            interaction.user.id,
-            item_id
-        )
-
-        if offer is None:
-            await interaction.response.send_message(
-                "❌ You aren't offering that item.",
-                ephemeral=True
-            )
-            return
-
-        offered_amount = offer[3]
-
-        if amount > offered_amount:
-            await interaction.response.send_message(
-                f"❌ You're only offering **{offered_amount:,}** "
-                f"of that item.",
-                ephemeral=True
-            )
-            return
-
-        if amount == offered_amount:
-            remove_offer(
+        if item_id.lower() == "berries":
+            success = remove_berries_from_trade(
                 self.trade_id,
                 interaction.user.id,
-                item_id
+                amount
             )
         else:
-            from ..functions.offers import update_offer
-
-            update_offer(
+            success = remove_item_from_trade(
                 self.trade_id,
                 interaction.user.id,
                 item_id,
-                offered_amount - amount
+                amount
             )
+
+        if not success:
+            await interaction.response.send_message(
+                "❌ You aren't offering that amount.",
+                ephemeral=True
+            )
+            return
 
         await interaction.response.send_message(
             f"✅ Removed **{item_id} ×{amount}** "
