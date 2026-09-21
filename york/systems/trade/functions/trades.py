@@ -60,3 +60,7 @@ def delete_trade(
         "trade_id = ?",
         (trade_id,)
     )
+
+
+    def get_trades():
+    return db.fetchall("trades")
