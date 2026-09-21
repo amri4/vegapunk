@@ -12,6 +12,9 @@ def validate_trade(
     trade,
     offers
 ):
+    if not offers:
+        return False
+
     guild_id = trade[1]
 
     for offer in offers:
