@@ -5,6 +5,8 @@ from ..functions.trades import (
     update_trade_status
 )
 
+from ..views.trade import TradeView
+
 
 class AcceptTradeButton(discord.ui.Button):
     def __init__(self, trade_id):
@@ -12,6 +14,7 @@ class AcceptTradeButton(discord.ui.Button):
             label="Accept",
             style=discord.ButtonStyle.success
         )
+
         self.trade_id = trade_id
 
     async def callback(
@@ -48,12 +51,16 @@ class AcceptTradeButton(discord.ui.Button):
             "accepted"
         )
 
+        view = TradeView(
+            self.trade_id
+        )
+
         await interaction.response.edit_message(
             content=(
-                f"🤝 Trade **#{self.trade_id}** "
-                f"has been accepted!"
+                f"🤝 Trade **#{self.trade_id}** accepted!\n"
+                "Add what you want to offer below."
             ),
-            view=None
+            view=view
         )
 
 
@@ -63,6 +70,7 @@ class DeclineTradeButton(discord.ui.Button):
             label="Decline",
             style=discord.ButtonStyle.danger
         )
+
         self.trade_id = trade_id
 
     async def callback(
@@ -101,8 +109,7 @@ class DeclineTradeButton(discord.ui.Button):
 
         await interaction.response.edit_message(
             content=(
-                f"❌ Trade **#{self.trade_id}** "
-                f"was declined."
+                f"❌ Trade **#{self.trade_id}** was declined."
             ),
             view=None
         )
