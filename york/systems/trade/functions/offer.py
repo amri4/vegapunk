@@ -1,5 +1,4 @@
 from ...inventory.functions.inventory import get_amount
-
 from ...devilfruits.functions.fruits import get_fruit
 
 from .offers import (
@@ -28,7 +27,20 @@ def add_item_to_trade(
         item_id
     )
 
-    if current < amount:
+    existing = get_offer(
+        trade_id,
+        user_id,
+        item_id
+    )
+
+    existing_amount = 0
+
+    if existing is not None:
+        existing_amount = existing[3]
+
+    total_amount = existing_amount + amount
+
+    if current < total_amount:
         return False
 
     fruit = get_fruit(
@@ -36,6 +48,7 @@ def add_item_to_trade(
     )
 
     if fruit is not None:
+
         tradeable = fruit[4]
 
         if not tradeable:
@@ -45,7 +58,7 @@ def add_item_to_trade(
         trade_id,
         user_id,
         item_id,
-        amount
+        total_amount
     )
 
     clear_confirmations(
@@ -76,6 +89,7 @@ def remove_item_from_trade(
         return False
 
     if amount == current:
+
         remove_offer(
             trade_id,
             user_id,
@@ -83,6 +97,7 @@ def remove_item_from_trade(
         )
 
     else:
+
         update_offer(
             trade_id,
             user_id,
