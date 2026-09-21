@@ -133,3 +133,11 @@ def get_inventory(
         if item[0] == user_id
         and item[1] == guild_id
     ]
+
+
+    def remove_item_everywhere(item_id):
+    db.delete(
+        "inventory",
+        "item_id = ?",
+        (item_id,)
+    )
