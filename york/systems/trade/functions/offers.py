@@ -78,7 +78,7 @@ def remove_offers(
     )
 
 
-    def update_offer(
+def update_offer(
     trade_id,
     user_id,
     item_id,
