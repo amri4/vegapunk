@@ -1,5 +1,7 @@
 from ...inventory.functions.inventory import get_amount
 
+from ...devilfruits.functions.fruits import get_fruit
+
 from .offers import (
     add_offer,
     get_offer,
@@ -8,6 +10,9 @@ from .offers import (
 )
 
 from .confirmations import clear_confirmations
+
+
+BERRIES_ITEM_ID = "berries"
 
 
 def add_item_to_trade(
@@ -25,6 +30,16 @@ def add_item_to_trade(
 
     if current < amount:
         return False
+
+    fruit = get_fruit(
+        item_id
+    )
+
+    if fruit is not None:
+        tradeable = fruit[4]
+
+        if not tradeable:
+            return False
 
     add_offer(
         trade_id,
@@ -66,6 +81,7 @@ def remove_item_from_trade(
             user_id,
             item_id
         )
+
     else:
         update_offer(
             trade_id,
