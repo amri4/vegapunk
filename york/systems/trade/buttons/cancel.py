@@ -5,20 +5,16 @@ from ..functions.trades import (
     update_trade_status
 )
 
-from ..functions.confirmations import (
-    clear_confirmations
-)
-
-from ..functions.offers import (
-    remove_offers
-)
+from ..functions.confirmations import clear_confirmations
+from ..functions.offers import remove_offers
 
 
 class CancelTradeButton(discord.ui.Button):
     def __init__(self, trade_id):
         super().__init__(
             label="Cancel",
-            style=discord.ButtonStyle.danger
+            style=discord.ButtonStyle.danger,
+            custom_id=f"trade:cancel:{trade_id}"
         )
 
         self.trade_id = trade_id
@@ -33,7 +29,7 @@ class CancelTradeButton(discord.ui.Button):
 
         if trade is None:
             await interaction.response.send_message(
-                "❌ This trade doesn't exist.",
+                "❌ This trade no longer exists.",
                 ephemeral=True
             )
             return
@@ -53,7 +49,7 @@ class CancelTradeButton(discord.ui.Button):
             trade[3]
         ):
             await interaction.response.send_message(
-                "❌ You aren't part of this trade.",
+                "❌ You are not part of this trade.",
                 ephemeral=True
             )
             return
@@ -72,9 +68,7 @@ class CancelTradeButton(discord.ui.Button):
         )
 
         await interaction.response.edit_message(
-            content=(
-                f"❌ Trade **#{self.trade_id}** cancelled."
-            ),
+            content=f"❌ Trade **#{self.trade_id}** cancelled.",
             embed=None,
             view=None
         )
