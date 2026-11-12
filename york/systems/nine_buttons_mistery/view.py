@@ -46,13 +46,13 @@ class MysteryButton(discord.ui.Button):
                     berry_reward
                 )
 
-        elif self.reward == "gem":
-            fragment_reward = random.randint(5, 20)
-            add_fragments(
-                interaction.guild.id,
-                interaction.user.id,
-                fragment_reward
-            )
+            elif self.reward == "gem":
+                fragment_reward = random.randint(5, 20)
+                add_fragments(
+                    interaction.guild.id,
+                    interaction.user.id,
+                    fragment_reward
+                )
 
         else:
             self.label = "❌"
