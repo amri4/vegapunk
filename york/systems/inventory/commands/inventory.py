@@ -4,6 +4,7 @@ from discord import app_commands
 from ...berries.functions.berries import get_berries
 from ...devilfruits.functions.fruits import get_fruit
 from ..functions.inventory import get_inventory
+from ...fragments.functions.fragments import get_fragments
 
 
 @app_commands.command(
@@ -20,6 +21,10 @@ async def inventory(
         guild_id,
         user_id
     )
+    fragments = get_fragments(
+        guild_id,
+        user_id
+    )
 
     items = get_inventory(
         guild_id,
@@ -27,7 +32,7 @@ async def inventory(
     )
 
     description = (
-        f"<:berries:1550458400800776344> **Berries:** {berries:,}\n\n"
+        f"<:berries:1550458400800776344> **Berries:** {berries:,}\n <:fragments:1570552404414435389> **Fragments:** {fragments:,}\n\n"
     )
 
     if not items:
