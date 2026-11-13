@@ -32,7 +32,7 @@ async def inventory(
     )
 
     description = (
-        f"<:berries:1550458400800776344> **Berries:** {berries:,}\n <:fragments:1570552404414435389> **Fragments:** {fragments:,}\n\n"
+        f"<:berries:1550458400800776344> **Berries:** {berries:,}\n 💎 **Fragments:** {fragments:,}\n\n"
     )
 
     if not items:
