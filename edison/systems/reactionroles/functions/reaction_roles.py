@@ -88,7 +88,7 @@ async def start_reaction_role_setup(
         )
         return
 
-    subtitle = title_message.content.strip()
+    subtitle = subtitle_message.content.strip()
    
     # =========================================
     # DESCRIPTION
