@@ -71,6 +71,26 @@ async def start_reaction_role_setup(
     title = title_message.content.strip()
 
     # =========================================
+    # SUBTITLE
+    # =========================================
+
+    subtitle_message = await ask_message(
+        interaction,
+        "📝 What should the embed subtitle of the roles be?"
+    )
+
+    if subtitle_message is None:
+        return
+
+    if subtitle_message.content.lower() == "cancel":
+        await interaction.followup.send(
+            "❌ Setup cancelled."
+        )
+        return
+
+    subtitle = title_message.content.strip()
+   
+    # =========================================
     # DESCRIPTION
     # =========================================
 
@@ -333,7 +353,7 @@ async def start_reaction_role_setup(
     )
 
     embed.add_field(
-        name="🎭 Reaction Roles",
+        name=subtitle,
         value=role_lines,
         inline=False
     )
