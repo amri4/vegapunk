@@ -10,7 +10,7 @@ from shaka.systems.profile.functions.embed import profile_embed
 async def profile(
     interaction: discord.Interaction,
     member: discord.Member = None
-)
+):
 member = member or interaction.user
 
 embed = profile_embed(
