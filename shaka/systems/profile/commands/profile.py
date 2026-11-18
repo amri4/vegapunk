@@ -4,7 +4,7 @@ from discord import app_commands
 from shaka.systems.profile.functions.embed import profile_embed
 
 @app_commands.command(
-    name="Profile",
+    name="profile",
     description="View your or others Profile."
 )
 async def profile(
@@ -13,10 +13,10 @@ async def profile(
 ):
     member = member or interaction.user
 
-embed = profile_embed(
-    member,
-    interaction.guild_id
-)
+    embed = profile_embed(
+        member,
+        interaction.guild_id
+    )
 
     await interaction.response.send_message(
         embed=embed
