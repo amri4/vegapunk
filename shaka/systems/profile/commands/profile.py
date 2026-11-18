@@ -4,7 +4,7 @@ from discord import app_commands
 from shaka.systems.profile.functions.embed import profile_embed
 
 @app_commands.command(
-    name="Profile"
+    name="Profile",
     description="View your or others Profile."
 )
 async def profile(
