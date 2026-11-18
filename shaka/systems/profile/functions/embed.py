@@ -16,15 +16,20 @@ def profile_embed(
         )
     )
     embed = discord.Embed(
-        title=f"{member.mention}'s' Profile",
+        title=f"{member.display_name}'s Profile",
         description=f"**General Information**"
     )
     embed.set_thumbnail(
         url=member.display_avatar.url
     )
+    joined = (
+        discord.utils.format_dt(member.joined_at, style='R')
+            if member.joined_at else "Unknown"
+    )
     embed.add_field(
         name="📅 Joined:",
-        value=f"`{discord.utils.format_dt(member.joined_at, style='R')}`\n"
+        value=joined,
+        inline=True
         )
     
     return embed
