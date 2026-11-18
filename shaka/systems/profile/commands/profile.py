@@ -18,6 +18,6 @@ embed = profile_embed(
     interaction.guild_id
 )
 
-await interaction.response.send_message(
+    await interaction.response.send_message(
     embed=embed
 )
