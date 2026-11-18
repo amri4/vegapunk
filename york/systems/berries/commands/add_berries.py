@@ -6,7 +6,7 @@ from york.systems.berries.functions.berries import add_berries
     name="give_berries",
     description="give member berries"
 )
-@app_commands.checks.has_permission(administrator=True)
+@app_commands.checks.has_permissions(administrator=True)
 async def give_berries(
     interaction: discord.Interaction,
     amount: int,
