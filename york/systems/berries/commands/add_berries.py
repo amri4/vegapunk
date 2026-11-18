@@ -14,7 +14,8 @@ async def give_berries(
 ):
     if amount = 0:
         await interaction.response.send_message(
-            "You can't give someone zero berries bruh 😭"
+            "You can't give someone zero berries bruh 😭",
+            ephemeral=True
         )
         return
     
