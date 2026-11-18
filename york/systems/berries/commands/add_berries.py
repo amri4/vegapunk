@@ -12,7 +12,7 @@ async def give_berries(
     amount: int,
     member: discord.Member
 ):
-    if amount = 0:
+    if amount <= 0:
         await interaction.response.send_message(
             "You can't give someone zero berries bruh 😭",
             ephemeral=True
