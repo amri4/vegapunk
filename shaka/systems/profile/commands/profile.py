@@ -1,5 +1,6 @@
 import discord
 from discord import app_commands
+
 from shaka.systems.profile.functions.embed import profile_embed
 
 @app_commands.command(
