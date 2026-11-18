@@ -19,5 +19,5 @@ embed = profile_embed(
 )
 
     await interaction.response.send_message(
-    embed=embed
-)
+        embed=embed
+    )
