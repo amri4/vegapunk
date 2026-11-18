@@ -11,7 +11,7 @@ async def profile(
     interaction: discord.Interaction,
     member: discord.Member = None
 ):
-member = member or interaction.user
+    member = member or interaction.user
 
 embed = profile_embed(
     member,
