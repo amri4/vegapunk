@@ -15,7 +15,7 @@ member = member or interaction.user
 
 embed = profile_embed(
     member,
-    interaction.guild.id
+    interaction.guild_id
 )
 
 await interaction.response.send_message(
