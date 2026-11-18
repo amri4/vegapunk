@@ -21,3 +21,6 @@ async def profile(
     await interaction.response.send_message(
         embed=embed
     )
+
+def setup(bot):
+    bot.tree.add_command(profile)
