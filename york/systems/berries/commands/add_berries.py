@@ -27,3 +27,6 @@ async def give_berries(
     await interaction.response.send_message(
         f"✅ Added **{amount:,}** to **{member.display_name}'s** balance."
     )
+
+def setup(bot):
+    bot.tree.add_command(give_berries)
