@@ -20,7 +20,7 @@ async def give_berries(
         return
     
     await add_berries(
-        member,
+        member.id,
         interaction.guild.id,
         amount
     )
