@@ -1,5 +1,3 @@
-import random
-
 import discord
 import mycord
 from discord import app_commands
@@ -34,44 +32,67 @@ async def warn(
     member: discord.Member,
     reason: str = "No reason provided."
 ):
-    if member.id == interaction.user.id:
-        responses = [
-            "You want to warn yourself? What exactly am I supposed to write?",
-            "Tch. I'm not giving you a warning just because you asked.",
-            "If you know you've done something wrong, fix it."
-        ]
+    if not interaction.user.guild_permissions.moderate_members:
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Missing Permission",
+                description="You need **Moderate Members** to use this command.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
+        return
 
-        await interaction.response.send_message(random.choice(responses))
+    if member.id == interaction.user.id:
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Warn Failed",
+                description="You can't warn yourself.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
         return
 
     if member.id == interaction.guild.owner_id:
-        responses = [
-            "I'm not warning the owner. Find someone else to handle it.",
-            "Tch. You expect me to warn the owner?",
-            "That's above my authority."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Warn Failed",
+                description="You can't warn the server owner.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
         return
 
-    if member.top_role >= interaction.user.top_role:
-        responses = [
-            "Their authority is too high for you to order a warning.",
-            "Tch. Their role is equal to or above yours.",
-            "Get someone with higher authority."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
+    if (
+        interaction.user.id != interaction.guild.owner_id
+        and member.top_role >= interaction.user.top_role
+    ):
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Warn Failed",
+                description=(
+                    "You can't warn a member with an equal or higher role."
+                ),
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
         return
 
     if member.top_role >= interaction.guild.me.top_role:
-        responses = [
-            "Their role outranks mine. I can't deal with them.",
-            "Tch. I don't have enough authority over them.",
-            "Fix my role hierarchy first."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Warn Failed",
+                description=(
+                    "Their role is equal to or above mine. "
+                    "Move my role higher and try again."
+                ),
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
         return
 
     db.insert(
@@ -86,14 +107,16 @@ async def warn(
         )
     )
 
-    responses = [
-        f"{member.mention} has been warned. Don't make me do it again.",
-        f"Tch. {member.mention}, consider this your warning.",
-        f"{member.mention} has received a warning. Try not to test my patience.",
-        f"Warning issued to {member.mention}. That's one mark against you."
-    ]
+    embed = discord.Embed(
+        title="⚠️ Member Warned",
+        description=f"{member.mention} has been warned.",
+        color=discord.Color.red()
+    )
+    embed.add_field(name="Reason", value=reason, inline=False)
+    embed.set_thumbnail(url=member.display_avatar.url)
+    embed.set_footer(text=f"Moderator: {interaction.user}")
 
-    await interaction.response.send_message(random.choice(responses))
+    await interaction.response.send_message(embed=embed)
 
 
 def setup(bot):

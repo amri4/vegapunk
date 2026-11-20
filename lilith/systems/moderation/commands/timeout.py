@@ -1,4 +1,3 @@
-import random
 from datetime import timedelta
 
 import discord
@@ -21,44 +20,67 @@ async def timeout(
     duration: app_commands.Range[int, 1, 40320],
     reason: str = "No reason provided."
 ):
-    if member.id == interaction.user.id:
-        responses = [
-            "You want me to silence you? Make up your mind.",
-            "Tch. I'm not timing you out just because you asked.",
-            "If you want silence, stop talking."
-        ]
+    if not interaction.user.guild_permissions.moderate_members:
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Missing Permission",
+                description="You need **Moderate Members** to use this command.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
+        return
 
-        await interaction.response.send_message(random.choice(responses))
+    if member.id == interaction.user.id:
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Timeout Failed",
+                description="You can't timeout yourself.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
         return
 
     if member.id == interaction.guild.owner_id:
-        responses = [
-            "I'm not timing out the owner. Even I know where the line is.",
-            "You expect me to silence the owner? No.",
-            "Tch. The owner's authority is above mine."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Timeout Failed",
+                description="You can't timeout the server owner.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
         return
 
-    if member.top_role >= interaction.user.top_role:
-        responses = [
-            "Their authority is too high. You can't order me to punish them.",
-            "Tch. Their role is equal to or above yours.",
-            "Get someone with higher authority if you want that done."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
+    if (
+        interaction.user.id != interaction.guild.owner_id
+        and member.top_role >= interaction.user.top_role
+    ):
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Timeout Failed",
+                description=(
+                    "You can't timeout a member with an equal or higher role."
+                ),
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
         return
 
     if member.top_role >= interaction.guild.me.top_role:
-        responses = [
-            "Their role outranks mine. I can't touch them.",
-            "Tch. Give me enough authority first.",
-            "They're above my highest role. I can't timeout them."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Timeout Failed",
+                description=(
+                    "Their role is equal to or above mine. "
+                    "Move my role higher and try again."
+                ),
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
         return
 
     try:
@@ -66,33 +88,42 @@ async def timeout(
             discord.utils.utcnow() + timedelta(minutes=duration),
             reason=f"{reason} | Timed out by {interaction.user}"
         )
-
-        responses = [
-            f"{member} has been silenced for {duration} minute(s).",
-            f"Tch. {member} won't be speaking for the next {duration} minute(s).",
-            f"{member} is going quiet for {duration} minute(s).",
-            f"Done. {member} has been put on timeout."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
-
     except discord.Forbidden:
-        responses = [
-            "I don't have enough authority to timeout them.",
-            "Tch. My permissions aren't enough.",
-            "I can't apply the timeout with my current authority."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
-
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Timeout Failed",
+                description="I don't have permission to timeout that member.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
+        return
     except discord.HTTPException:
-        responses = [
-            "The timeout failed. Discord rejected the operation.",
-            "Tch. Something went wrong. They're still talking.",
-            "The operation failed. Try again."
-        ]
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Timeout Failed",
+                description="Discord rejected the timeout. Try again.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
+        return
 
-        await interaction.response.send_message(random.choice(responses))
+    embed = discord.Embed(
+        title="⏳ Member Timed Out",
+        description=f"{member.mention} has been timed out.",
+        color=discord.Color.red()
+    )
+    embed.add_field(
+        name="Duration",
+        value=f"{duration} minute(s)",
+        inline=True
+    )
+    embed.add_field(name="Reason", value=reason, inline=False)
+    embed.set_thumbnail(url=member.display_avatar.url)
+    embed.set_footer(text=f"Moderator: {interaction.user}")
+
+    await interaction.response.send_message(embed=embed)
 
 
 def setup(bot):

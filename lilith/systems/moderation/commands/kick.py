@@ -1,5 +1,3 @@
-import random
-
 import discord
 from discord import app_commands
 
@@ -18,77 +16,104 @@ async def kick(
     member: discord.Member,
     reason: str = "No reason provided."
 ):
-    if member.id == interaction.user.id:
-        responses = [
-            "You want me to kick you? Tch. I'm not playing along.",
-            "You're asking me to throw you out? Ridiculous.",
-            "No. I'm not kicking you. Try using your authority properly."
-        ]
+    if not interaction.user.guild_permissions.kick_members:
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Missing Permission",
+                description="You need **Kick Members** to use this command.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
+        return
 
-        await interaction.response.send_message(random.choice(responses))
+    if member.id == interaction.user.id:
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Kick Failed",
+                description="You can't kick yourself.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
         return
 
     if member.id == interaction.guild.owner_id:
-        responses = [
-            "I'm not kicking the owner. Even I have limits.",
-            "You want me to throw out the person who owns this place? No.",
-            "Tch. That's the owner. Find someone else."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Kick Failed",
+                description="You can't kick the server owner.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
         return
 
-    if member.top_role >= interaction.user.top_role:
-        responses = [
-            "Their authority is too high for you to order their removal.",
-            "Tch. Their role is equal to or above yours. I can't kick them.",
-            "They're above your authority. Get someone with a higher rank."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
+    if (
+        interaction.user.id != interaction.guild.owner_id
+        and member.top_role >= interaction.user.top_role
+    ):
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Kick Failed",
+                description=(
+                    "You can't kick a member with an equal or higher role."
+                ),
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
         return
 
     if member.top_role >= interaction.guild.me.top_role:
-        responses = [
-            "They're above my authority. Give me a higher role.",
-            "Tch. I can't kick someone whose role outranks mine.",
-            "My authority isn't high enough to remove them."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Kick Failed",
+                description=(
+                    "Their role is equal to or above mine. "
+                    "Move my role higher and try again."
+                ),
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
         return
 
     try:
         await member.kick(
             reason=f"{reason} | Kicked by {interaction.user}"
         )
-
-        responses = [
-            f"{member} has been thrown out.",
-            f"Tch. {member} is out.",
-            f"{member} has been removed from this island.",
-            f"Done. {member} is no longer a problem here."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
-
     except discord.Forbidden:
-        responses = [
-            "I don't have enough authority to kick them.",
-            "Tch. My permissions aren't enough.",
-            "You gave me the job, but not enough authority to carry it out."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
-
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Kick Failed",
+                description="I don't have permission to kick that member.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
+        return
     except discord.HTTPException:
-        responses = [
-            "The kick failed. Discord rejected the operation.",
-            "Tch. Something went wrong. They're still here.",
-            "The operation failed. Try again."
-        ]
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Kick Failed",
+                description="Discord rejected the kick. Try again.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
+        return
 
-        await interaction.response.send_message(random.choice(responses))
+    embed = discord.Embed(
+        title="👢 Member Kicked",
+        description=f"{member.mention} has been kicked.",
+        color=discord.Color.red()
+    )
+    embed.add_field(name="Reason", value=reason, inline=False)
+    embed.set_thumbnail(url=member.display_avatar.url)
+    embed.set_footer(text=f"Moderator: {interaction.user}")
+
+    await interaction.response.send_message(embed=embed)
 
 
 def setup(bot):
