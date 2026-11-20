@@ -1,5 +1,3 @@
-import random
-
 import discord
 from discord import app_commands
 
@@ -16,44 +14,68 @@ async def untimeout(
     interaction: discord.Interaction,
     member: discord.Member
 ):
-    if member.id == interaction.user.id:
-        responses = [
-            "You timed yourself out and now want me to undo it? Make up your mind.",
-            "Tch. You got yourself into this. Get yourself out.",
-            "I'm not undoing your own punishment for you."
-        ]
+    if not interaction.user.guild_permissions.moderate_members:
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Missing Permission",
+                description="You need **Moderate Members** to use this command.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
+        return
 
-        await interaction.response.send_message(random.choice(responses))
+    if member.id == interaction.user.id:
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Untimeout Failed",
+                description="You can't remove your own timeout.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
         return
 
     if member.id == interaction.guild.owner_id:
-        responses = [
-            "The owner doesn't need me to interfere with their timeout.",
-            "Tch. I'm not touching the owner's moderation status.",
-            "That's the owner. Handle it yourself."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Untimeout Failed",
+                description="You can't change the server owner's timeout.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
         return
 
-    if member.top_role >= interaction.user.top_role:
-        responses = [
-            "Their authority is too high. You can't order me to change their moderation status.",
-            "Tch. Their role is equal to or above yours.",
-            "Get someone with higher authority."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
+    if (
+        interaction.user.id != interaction.guild.owner_id
+        and member.top_role >= interaction.user.top_role
+    ):
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Untimeout Failed",
+                description=(
+                    "You can't remove a timeout from a member "
+                    "with an equal or higher role."
+                ),
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
         return
 
     if member.top_role >= interaction.guild.me.top_role:
-        responses = [
-            "Their role outranks mine. I can't change their timeout.",
-            "Tch. I don't have enough authority over them.",
-            "Their authority exceeds mine. Fix my permissions first."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Untimeout Failed",
+                description=(
+                    "Their role is equal to or above mine. "
+                    "Move my role higher and try again."
+                ),
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
         return
 
     try:
@@ -61,33 +83,36 @@ async def untimeout(
             None,
             reason=f"Timeout removed by {interaction.user}"
         )
-
-        responses = [
-            f"{member} can speak again.",
-            f"Tch. {member}'s silence is over.",
-            f"{member} has been released.",
-            f"Done. {member} is no longer muted by timeout."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
-
     except discord.Forbidden:
-        responses = [
-            "I don't have enough authority to remove that timeout.",
-            "Tch. My permissions aren't enough.",
-            "I can't change their moderation status."
-        ]
-
-        await interaction.response.send_message(random.choice(responses))
-
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Untimeout Failed",
+                description="I don't have permission to remove that timeout.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
+        return
     except discord.HTTPException:
-        responses = [
-            "Something went wrong. The timeout is still active.",
-            "Tch. Discord rejected the operation.",
-            "The operation failed. Try again."
-        ]
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="❌ Untimeout Failed",
+                description="Discord rejected the timeout removal. Try again.",
+                color=discord.Color.red()
+            ),
+            ephemeral=True
+        )
+        return
 
-        await interaction.response.send_message(random.choice(responses))
+    embed = discord.Embed(
+        title="⏳ Timeout Removed",
+        description=f"{member.mention} is no longer timed out.",
+        color=discord.Color.red()
+    )
+    embed.set_thumbnail(url=member.display_avatar.url)
+    embed.set_footer(text=f"Moderator: {interaction.user}")
+
+    await interaction.response.send_message(embed=embed)
 
 
 def setup(bot):
