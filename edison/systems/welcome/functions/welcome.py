@@ -26,9 +26,24 @@ async def on_member_join(member):
     if welcome is None:
         return
 
+    faction_channel = discord.utils.get(
+        member.guild.text_channels,
+        name="choose-faction"
+    )
+
+    if faction_channel is None:
+        faction_target = "#choose-faction"
+    else:
+        faction_target = faction_channel.mention
+
     embed = discord.Embed(
         title=f"Welcome to {member.guild.name}",
-        description=f"{member.mention}\n **The seas have gained another pirate!**\n Welcome aboard! Your adventure starts here."
+        description=(
+            f"{member.mention}\n"
+            " **The seas have gained another adventurer!**\n"
+            " Welcome aboard! Your adventure starts here.\n"
+            f" Check {faction_target} to choose your side."
+        )
     )
     member_count = member.guild.member_count
     embed.set_footer(text=f"You're the {ordinal(member_count)} member in this server'")
@@ -44,6 +59,14 @@ async def on_member_join(member):
         embed=embed
     )
 
+    if faction_channel is not None:
+        try:
+            await faction_channel.send(
+                f"{member.mention} Choose your faction above!",
+                delete_after=10
+            )
+        except discord.Forbidden:
+            pass
 
 def setup(bot):
     bot.add_listener(on_member_join)

@@ -1,3 +1,11 @@
 
 .env
 __pycache__/
+
+setup.txt
+setup.py
+
+setup.txt
+setup.py
+
+*.db
