@@ -1,6 +1,7 @@
 import discord
 from discord import app_commands
 import mycord
+import time
 
 db = mycord.DB()
 
@@ -35,4 +36,20 @@ staff_commands = app_commands.Group(name="staff", description="Community staff m
 
 staff_commands.command(name="add", description="add a member to the staff team")
 async def add(interaction: discord.Interaction, member: discord.Member):
+    staff_member = db.fetchone(
+        "staff_members",
+        "user_id = ? AND guild_id = ?",
+        (member.id, )
+    )
+    
+    if member.bot:
+        await interaction.response.send_message("A bot can't be a staff member")
+        return
+        
+    joined = int(time.time())
+    db.insert(
+        "staff_members",
+        "user_id, guild_id, rank, joined_at, added_by",
+        (member, interaction.guild.id, "Support Team", joined, interaction.user.id)
+    )
     
