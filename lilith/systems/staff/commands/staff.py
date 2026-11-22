@@ -66,3 +66,8 @@ async def add(interaction: discord.Interaction, member: discord.Member):
         (member, interaction.guild.id, "Support Team", joined, actor.id)
     )
     await interaction.response.send_message(f"{member.mention} has been added by {actor.mention} as a staff member")
+
+
+    staff_commands.command(name="roaster", description="Shows all staff members")
+    async def roaster(interaction: discord.Interaction):
+        
