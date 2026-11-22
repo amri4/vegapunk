@@ -1,5 +1,20 @@
 import discord
 from discord import app_commands
+import mycord
+
+db = mycord.DB()
+
+db.create_table(
+    "staff_members",
+    """
+    user_id INTEGER,
+    guild_id INTEGER,
+    rank TEXT,
+    joined_at INTEGER,
+    added_by INTEGER,
+    PRIMARY KEY(user_id, guild_id)
+    """
+)
 
 STAFF_RANKS = {
     "Head Administrator": 5,
@@ -8,7 +23,16 @@ STAFF_RANKS = {
     "Moderator": 2,
     "Support Team": 1
 }
+def get_rank(member: discord.Member, guild: discord.Guild):
+    mod = db.fetchone(
+        "staff_members",
+        "user_id = ? AND guild_id = ?",
+        (member.id, guild.id)
+    )
+    return mod[2]
 
 staff_commands = app_commands.Group(name="staff", description="Community staff management")
 
 staff_commands.command(name="add", description="add a member to the staff team")
+async def add(interaction: discord.Interaction, member: discord.Member):
+    
