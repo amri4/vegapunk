@@ -20,6 +20,7 @@ db.create_table(
     "staff_roles",
     """
     guild_id INTEGER,
+    rank TEXT,
     role_id INTEGER
     """
 )
