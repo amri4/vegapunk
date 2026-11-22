@@ -16,6 +16,13 @@ db.create_table(
     PRIMARY KEY(user_id, guild_id)
     """
 )
+db.create_table(
+    "staff_roles",
+    """
+    guild_id INTEGER,
+    role_id INTEGER
+    """
+)
 
 STAFF_RANKS = {
     "Head Administrator": 5,
@@ -41,15 +48,20 @@ async def add(interaction: discord.Interaction, member: discord.Member):
         "user_id = ? AND guild_id = ?",
         (member.id, )
     )
-    
+    if staff_member:
+        await interaction.response.send_message("This member is already a staff member")
+        return
     if member.bot:
         await interaction.response.send_message("A bot can't be a staff member")
         return
+    interaction.create_role
+
+    actor = interaction.user
         
     joined = int(time.time())
     db.insert(
         "staff_members",
         "user_id, guild_id, rank, joined_at, added_by",
-        (member, interaction.guild.id, "Support Team", joined, interaction.user.id)
+        (member, interaction.guild.id, "Support Team", joined, actor.id)
     )
-    
+    await interaction.response.send_message(f"{member.mention} has been added by {actor.mention} as a staff member")
