@@ -8,3 +8,7 @@ STAFF_RANKS = {
     "Moderator": 2,
     "Support Team": 1
 }
+
+staff_commands = app_commands.Group(name="staff", description="Community staff management")
+
+staff_commands.command(name="add", description="add a member to the staff team")
