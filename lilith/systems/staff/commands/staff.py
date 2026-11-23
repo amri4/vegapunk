@@ -68,17 +68,23 @@ async def add(interaction: discord.Interaction, member: discord.Member):
     await interaction.response.send_message(f"{member.mention} has been added by {actor.mention} as a staff member")
 
 
-    staff_commands.command(name="remove", description="Shows all staff members")
-    async def remove(interaction: discord.Interaction, member: discord.Member):
-        mem = db.fetchone(
-            "staff_members",
-            "user_id = ? AND guild_id = ?",
-            (member.id, interaction.guild.id)
-        )
-        if not mem:
-            await interaction.response.send_message("This member is not a staff member")
-            return
-        db.delete(
-            "staff_members",
-            
-        )
+staff_commands.command(name="remove", description="Shows all staff members")
+async def remove(interaction: discord.Interaction, member: discord.Member):
+    mem = db.fetchone(
+        "staff_members",
+        "user_id = ? AND guild_id = ?",
+        (member.id, interaction.guild.id)
+    )
+    if not mem:
+        await interaction.response.send_message("This member is not a staff member")
+        return
+    db.delete(
+        "staff_members",
+        "user_id = ? AND guild_id = ?",
+        (member.id, interaction.guild.id)
+    )
+    await interaction.response.send_message(f"{member.mention} is no longer a staff member")
+
+
+def setup(bot):
+    bot.tree.add_command(staff_commands)
