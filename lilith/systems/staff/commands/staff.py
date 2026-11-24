@@ -138,6 +138,8 @@ async def add(
     role = get_staff_role(interaction.guild, st_rank)
     rank = get_rank(member, interaction.guild)
 
+    await member.add_roles(role)
+
     await interaction.response.send_message(
         f"{member.mention} has been added by "
         f"{actor.mention} as a **{rank}** staff member."
