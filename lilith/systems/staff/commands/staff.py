@@ -28,7 +28,17 @@ db.create_table(
     """
 )
 
+db.create_table(
+    "staff_panel",
+    """
+    guild_id INTEGER PRIMARY KEY,
+    channel_id INTEGER,
+    message_id INTEGER,
+    enabled INTEGER
+    """
+)
 
+#========RANKS========
 STAFF_RANKS = {
     "Head Administrator": 5,
     "Administrator": 4,
@@ -36,6 +46,29 @@ STAFF_RANKS = {
     "Moderator": 2,
     "Support Team": 1
 }
+
+#========BUTTONS========
+class StaffPanel(discord.ui.View):
+
+    def __init__(self, enabled=True):
+        super().__init__(timeout=None)
+
+        self.join_button.disabled = not enabled
+
+    @discord.ui.button(
+        label="Join Staff",
+        style=discord.ButtonStyle.primary,
+        custom_id="staff:join"
+    )
+    async def join_button(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+        await interaction.response.send_message(
+            "You clicked the staff button!",
+            ephemeral=True
+        )
 
 #========FUNCTIONS========
 def get_rank(member: discord.Member, guild: discord.Guild):
@@ -299,6 +332,93 @@ async def demote(interaction: discord.Interaction, member: discord.Member):
         -1
     )
 
+#########STAFF PANEL########
+@staff_commands.command(
+    name="panel",
+    description="Send the staff panel"
+)
+async def panel(interaction: discord.Interaction):
+
+    view = StaffPanel()
+
+    message = await interaction.channel.send(
+        "## Staff Panel\nClick below to interact.",
+        view=view
+    )
+
+    db.insert_replace(
+        "staff_panel",
+        "guild_id, channel_id, message_id, enabled",
+        (interaction.guild.id, interaction.channel.id, message.id, 1)
+    )
+
+    await interaction.response.send_message(
+        "Staff panel created!",
+        ephemeral=True
+    )
+
+#########STAFF APPLICATION#########
+@staff_commands.command(
+    name="application",
+    description="Enable or disable the staff panel button"
+)
+@app_commands.choices(
+    state=[
+        app_commands.Choice(name="On", value="on"),
+        app_commands.Choice(name="Off", value="off")
+    ]
+)
+async def application(
+    interaction: discord.Interaction,
+    state: app_commands.Choice[str]
+):
+
+    data = db.fetchone(
+        "staff_panel",
+        "guild_id = ?",
+        (interaction.guild.id,)
+    )
+
+    if not data:
+        await interaction.response.send_message(
+            "No staff panel has been created yet."
+        )
+        return
+
+    enabled = state.value == "on"
+
+    channel = interaction.guild.get_channel(data[1])
+
+    if not channel:
+        await interaction.response.send_message(
+            "The staff panel channel no longer exists."
+        )
+        return
+
+    try:
+        message = await channel.fetch_message(data[2])
+
+        await message.edit(
+            view=StaffPanel(enabled=enabled)
+        )
+
+        db.update(
+            "staff_panel",
+            "enabled = ?",
+            "guild_id = ?",
+            (int(enabled), interaction.guild.id)
+        )
+
+        await interaction.response.send_message(
+            f"Staff button is now **{'ON' if enabled else 'OFF'}**."
+        )
+
+    except discord.NotFound:
+        await interaction.response.send_message(
+            "The staff panel message no longer exists."
+        )
+
 
 def setup(bot):
     bot.tree.add_command(staff_commands)
+    bot.add_view(StaffPanel())
