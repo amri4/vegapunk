@@ -135,7 +135,7 @@ async def add(
         )
     )
 
-    role = get_staff_role(interaction.guild, st_rank)
+    role = await get_staff_role(interaction.guild, st_rank)
     rank = get_rank(member, interaction.guild)
 
     await member.add_roles(role)
@@ -165,6 +165,18 @@ async def remove(
             "This member is not a staff member."
         )
         return
+
+    role_data = db.fetchone(
+        "staff_roles",
+        "guild_id = ? AND rank = ?",
+        (interaction.guild.id, mem[2])
+    )
+
+    if role_data:
+        role = interaction.guild.get_role(role_data[2])
+
+        if role:
+            await member.remove_roles(role)
 
     db.delete(
         "staff_members",
