@@ -64,6 +64,8 @@ async def add(
     interaction: discord.Interaction,
     member: discord.Member
 ):
+    print("ADD COMMAND EXECUTED!", flush=True)
+    
     staff_member = db.fetchone(
         "staff_members",
         "user_id = ? AND guild_id = ?",
