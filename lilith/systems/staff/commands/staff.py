@@ -165,24 +165,27 @@ async def remove(
             "This member is not a staff member."
         )
         return
-
+    print("STAFF RECORD:", mem, flush=True)
     role_data = db.fetchone(
         "staff_roles",
         "guild_id = ? AND rank = ?",
         (interaction.guild.id, mem[2])
     )
+    print("ROLE DATA:", role_data, flush=True)
 
     if role_data:
         role = interaction.guild.get_role(role_data[2])
+        print("ROLE:", role, flush=True)
 
         if role:
             await member.remove_roles(role)
-
+    print("DELETING DATABASE RECORD", flush=True)
     db.delete(
         "staff_members",
         "user_id = ? AND guild_id = ?",
         (member.id, interaction.guild.id)
     )
+    print("DATABASE RECORD DELETED", flush=True)
 
     await interaction.response.send_message(
         f"{member.mention} is no longer a staff member."
