@@ -54,6 +54,16 @@ class StaffPanel(discord.ui.View):
         super().__init__(timeout=None)
 
         self.join_button.disabled = not enabled
+        self.join_button.disabled = not enabled
+
+        if enabled:
+            self.join_button.label = "Join Staff"
+            self.join_button.style = discord.ButtonStyle.success
+            self.join_button.emoji = "➕"
+        else:
+            self.join_button.label = "Currently Closed"
+            self.join_button.style = discord.ButtonStyle.danger
+            self.join_button.emoji = "⛔"
 
     @discord.ui.button(
         label="Join Staff",
