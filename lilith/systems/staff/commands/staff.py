@@ -5,6 +5,7 @@ import time
 
 db = mycord.DB()
 
+#========TABLES========
 db.create_table(
     "staff_members",
     """
@@ -36,7 +37,7 @@ STAFF_RANKS = {
     "Support Team": 1
 }
 
-
+#========FUNCTIONS========
 def get_rank(member: discord.Member, guild: discord.Guild):
     mod = db.fetchone(
         "staff_members",
@@ -168,7 +169,8 @@ staff_commands = app_commands.Group(
     description="Community staff management"
 )
 
-
+#========COMMANDS========
+#########STAFF ADD########
 @staff_commands.command(
     name="add",
     description="Add a member to the staff team"
@@ -222,7 +224,7 @@ async def add(
         f"{actor.mention} as a **{rank}** staff member."
     )
 
-
+#########STAFF REMOVE########
 @staff_commands.command(
     name="remove",
     description="Remove a member from the staff team"
@@ -271,7 +273,7 @@ async def remove(
         f"{member.mention} is no longer a staff member."
     )
 
-
+#########STAFF PROMOTE########
 @staff_commands.command(
     name="promote",
     description="Promote a staff member"
@@ -284,7 +286,7 @@ async def promote(interaction: discord.Interaction, member: discord.Member):
         1
     )
 
-
+#########STAFF DEMOTE########
 @staff_commands.command(
     name="demote",
     description="Demote a staff member"
