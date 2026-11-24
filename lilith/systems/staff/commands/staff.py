@@ -101,8 +101,7 @@ async def add(
 
     rank = get_rank(member, interaction.guild)
 
-    print(f"Rank: {rank!r}")
-    print(f"Type: {type(rank)}")
+    print(f"RANK: {rank!r}", flush=True)
 
     await interaction.response.send_message(
         f"{member.mention} has been added by "
