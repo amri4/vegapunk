@@ -86,6 +86,83 @@ async def get_staff_role(guild: discord.Guild, rank: str):
     return role
 
 
+async def change_staff_rank(interaction, member, direction):
+
+    guild = interaction.guild
+
+    # Get staff record
+    staff = db.fetchone(
+        "staff_members",
+        "user_id = ? AND guild_id = ?",
+        (member.id, guild.id)
+    )
+
+    if not staff:
+        await interaction.response.send_message(
+            "This member is not a staff member."
+        )
+        return
+
+    current_rank = staff[2]
+
+    current_level = STAFF_RANKS.get(current_rank)
+
+    if current_level is None:
+        await interaction.response.send_message(
+            "This member has an invalid staff rank."
+        )
+        return
+
+    # Find the new rank
+    new_level = current_level + direction
+
+    new_rank = next(
+        (
+            rank
+            for rank, level in STAFF_RANKS.items()
+            if level == new_level
+        ),
+        None
+    )
+
+    if new_rank is None:
+        await interaction.response.send_message(
+            "This member is already at the highest or lowest rank."
+        )
+        return
+
+    await interaction.response.defer()
+
+    try:
+        # Get both roles
+        old_role = await get_staff_role(guild, current_rank)
+        new_role = await get_staff_role(guild, new_rank)
+
+        # Change Discord roles
+        await member.add_roles(new_role)
+        await member.remove_roles(old_role)
+
+        # Update database
+        db.update(
+            "staff_members",
+            "rank = ?",
+            "user_id = ? AND guild_id = ?",
+            (new_rank, member.id, guild.id)
+        )
+
+        await interaction.followup.send(
+            f"{member.mention} has been "
+            f"{'promoted' if direction == 1 else 'demoted'} "
+            f"from **{current_rank}** to **{new_rank}**."
+        )
+
+    except discord.HTTPException:
+        await interaction.followup.send(
+            "I couldn't update the member's Discord roles. "
+            "Check my role permissions and hierarchy."
+        )
+
+
 staff_commands = app_commands.Group(
     name="staff",
     description="Community staff management"
@@ -192,6 +269,32 @@ async def remove(
 
     await interaction.response.send_message(
         f"{member.mention} is no longer a staff member."
+    )
+
+
+@staff_commands.command(
+    name="promote",
+    description="Promote a staff member"
+)
+async def promote(interaction: discord.Interaction, member: discord.Member):
+
+    await change_staff_rank(
+        interaction,
+        member,
+        1
+    )
+
+
+@staff_commands.command(
+    name="demote",
+    description="Demote a staff member"
+)
+async def demote(interaction: discord.Interaction, member: discord.Member):
+
+    await change_staff_rank(
+        interaction,
+        member,
+        -1
     )
 
 
