@@ -180,12 +180,15 @@ async def remove(
         if role:
             await member.remove_roles(role)
     print("DELETING DATABASE RECORD", flush=True)
-    db.delete(
-        "staff_members",
-        "user_id = ? AND guild_id = ?",
-        (member.id, interaction.guild.id)
-    )
-    print("DATABASE RECORD DELETED", flush=True)
+    try:
+        db.delete(
+            "staff_members",
+            "user_id = ? AND guild_id = ?",
+            (member.id, interaction.guild.id)
+        )
+        print("DATABASE RECORD DELETED", flush=True)
+    except Exception as e:
+        print(f"DELETE ERROR: {type(e).__name__}: {e}", flush=True)
 
     await interaction.response.send_message(
         f"{member.mention} is no longer a staff member."
