@@ -50,6 +50,42 @@ def get_rank(member: discord.Member, guild: discord.Guild):
     return mod[2]
 
 
+async def get_staff_role(guild: discord.Guild, rank: str):
+
+    role_data = db.fetchone(
+        "staff_roles",
+        "guild_id = ? AND rank = ?",
+        (guild.id, rank)
+    )
+
+    if role_data:
+        role = guild.get_role(role_data[2])
+
+        if role:
+            return role
+
+        # The saved Discord role no longer exists
+        db.delete(
+            "staff_roles",
+            "guild_id = ? AND rank = ?",
+            (guild.id, rank)
+        )
+
+    # Create a new role
+    role = await guild.create_role(
+        name=rank,
+        reason="Staff rank role"
+    )
+
+    db.insert(
+        "staff_roles",
+        "guild_id, rank, role_id",
+        (guild.id, rank, role.id)
+    )
+
+    return role
+
+
 staff_commands = app_commands.Group(
     name="staff",
     description="Community staff management"
@@ -64,7 +100,7 @@ async def add(
     interaction: discord.Interaction,
     member: discord.Member
 ):
-    print("ADD COMMAND EXECUTED!", flush=True)
+    st_rank = "Support Team"
     
     staff_member = db.fetchone(
         "staff_members",
@@ -93,12 +129,13 @@ async def add(
         (
             member.id,
             interaction.guild.id,
-            "Support Team",
+            st_rank,
             joined,
             actor.id
         )
     )
 
+    role = get_staff_role(interaction.guild, st_rank)
     rank = get_rank(member, interaction.guild)
 
     await interaction.response.send_message(
