@@ -408,7 +408,26 @@ async def application(
     try:
         message = await channel.fetch_message(data[2])
 
+        embed = discord.Embed(
+            title=(
+                "OPENED"
+                if enabled
+                else "CLOSED"
+            ),
+            description=(
+                "Click below to join our staff team of our Community!"
+                if enabled 
+                else "Our Community isn't in need for more staff members at the moment."
+            ),
+            color=(
+                discord.Color.green()
+                if enabled
+                else discord.Color.red()
+            )
+        )
+
         await message.edit(
+            embed=embed,
             view=StaffPanel(enabled=enabled)
         )
 
