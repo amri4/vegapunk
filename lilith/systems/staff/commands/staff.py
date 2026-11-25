@@ -1044,107 +1044,85 @@ async def staff_panel(
 # APPLICATION TOGGLE COMMANDS
 # =========================================================
 
-application_group = app_commands.Group(
+@staff_commands.command(
     name="application",
-    description="Manage staff applications",
-    parent=staff_commands
+    description="Enable or disable the staff panel button"
 )
-
-
-async def set_application_status(
+@app_commands.choices(
+    state=[
+        app_commands.Choice(name="On", value="on"),
+        app_commands.Choice(name="Off", value="off")
+    ]
+)
+async def application(
     interaction: discord.Interaction,
-    enabled: bool
+    state: app_commands.Choice[str]
 ):
 
-    if not interaction.user.guild_permissions.administrator:
-
-        await interaction.response.send_message(
-            "You need administrator permissions.",
-            ephemeral=True
-        )
-        return
-
-    panel = db.fetchone(
+    data = db.fetchone(
         "staff_panel",
         "guild_id = ?",
         (interaction.guild.id,)
     )
 
-    if not panel:
-
+    if not data:
         await interaction.response.send_message(
-            "There is no staff panel configured.",
-            ephemeral=True
+            "No staff panel has been created yet."
         )
         return
 
-    channel = interaction.guild.get_channel(panel[1])
+    enabled = state.value == "on"
+
+    channel = interaction.guild.get_channel(data[1])
 
     if not channel:
-
         await interaction.response.send_message(
-            "The staff panel channel could not be found.",
-            ephemeral=True
+            "The staff panel channel no longer exists."
         )
         return
 
     try:
+        message = await channel.fetch_message(data[2])
 
-        message = await channel.fetch_message(panel[2])
+        embed = discord.Embed(
+            title=(
+                "OPENED"
+                if enabled
+                else "CLOSED"
+            ),
+            description=(
+                "Click below to join our staff team of our Community!"
+                if enabled 
+                else "Our Community isn't in need for more staff members at the moment."
+            ),
+            color=(
+                discord.Color.green()
+                if enabled
+                else discord.Color.red()
+            )
+        )
 
         await message.edit(
+            embed=embed,
             view=StaffPanel(enabled=enabled)
         )
 
-    except discord.NotFound:
+        db.update(
+            "staff_panel",
+            "enabled = ?",
+            "guild_id = ?",
+            (int(enabled), interaction.guild.id)
+        )
 
         await interaction.response.send_message(
-            "The staff panel message no longer exists.",
-            ephemeral=True
+            f"Staff button is now **{'ON' if enabled else 'OFF'}**."
         )
-        return
 
-    db.update(
-        "staff_panel",
-        "enabled = ?",
-        "guild_id = ?",
-        (int(enabled), interaction.guild.id)
-    )
+    except discord.NotFound:
+        await interaction.response.send_message(
+            "The staff panel message no longer exists."
+        )
 
-    status = "opened" if enabled else "closed"
-
-    await interaction.response.send_message(
-        f"Staff applications have been **{status}**.",
-        ephemeral=True
-    )
-
-
-@application_group.command(
-    name="on",
-    description="Open staff applications"
-)
-async def application_on(
-    interaction: discord.Interaction
-):
-
-    await set_application_status(
-        interaction,
-        True
-    )
-
-
-@application_group.command(
-    name="off",
-    description="Close staff applications"
-)
-async def application_off(
-    interaction: discord.Interaction
-):
-
-    await set_application_status(
-        interaction,
-        False
-    )
 
 
 # =========================================================
