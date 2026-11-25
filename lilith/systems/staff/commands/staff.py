@@ -631,10 +631,11 @@ async def application_help(ctx):
     embed = discord.Embed(
         title="Staff Application Commands",
         description=(
+            "Prefix - `Lilith`\n"
             "`help` - Show this help message\n"
-            "`Confirm` - Accept the applicant\n"
-            "`Close` - Close the application\n"
-            "`Invite @member/@role` - Give someone access"
+            "`confirm` - Accept the applicant\n"
+            "`close` - Close the application\n"
+            "`invite @member/@role` - Give someone access"
         ),
         color=discord.Color.blue()
     )
@@ -642,7 +643,7 @@ async def application_help(ctx):
     await ctx.reply(embed=embed)
 
 
-@commands.command(name="Confirm")
+@commands.command(name="confirm")
 async def confirm_application(ctx):
 
     application = await require_reviewer(ctx)
@@ -704,7 +705,7 @@ async def confirm_application(ctx):
     await close_application_channel(ctx.channel)
 
 
-@commands.command(name="Close")
+@commands.command(name="close")
 async def close_application(ctx):
 
     application = await require_reviewer(ctx)
@@ -724,7 +725,7 @@ async def close_application(ctx):
     await close_application_channel(ctx.channel)
 
 
-@commands.command(name="Invite")
+@commands.command(name="invite")
 async def invite_application(
     ctx,
     target: discord.Member | discord.Role
