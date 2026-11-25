@@ -212,7 +212,7 @@ staff_commands = app_commands.Group(
     description="Community staff management"
 )
 
-#========COMMANDS========
+#========SLASH COMMANDS========
 #########STAFF ADD########
 @staff_commands.command(
     name="add",
