@@ -1,3 +1,4 @@
+
 import asyncio
 import discord
 from discord import app_commands
@@ -6,11 +7,12 @@ import mycord
 import time
 
 
-# =========================================================
-# DATABASE
-# =========================================================
-
 db = mycord.DB()
+
+
+# =========================================================
+# TABLES
+# =========================================================
 
 db.create_table(
     "staff_members",
@@ -45,6 +47,14 @@ db.create_table(
 )
 
 db.create_table(
+    "owner_roles",
+    """
+    guild_id INTEGER PRIMARY KEY,
+    role_id INTEGER
+    """
+)
+
+db.create_table(
     "staff_applications",
     """
     channel_id INTEGER PRIMARY KEY,
@@ -53,15 +63,6 @@ db.create_table(
     reviewer_id INTEGER,
     status TEXT,
     created_at INTEGER
-    """
-)
-
-# Owner roles are stored separately from normal staff ranks.
-db.create_table(
-    "owner_roles",
-    """
-    guild_id INTEGER PRIMARY KEY,
-    role_id INTEGER
     """
 )
 
@@ -85,41 +86,47 @@ application_locks = {}
 # STAFF FUNCTIONS
 # =========================================================
 
-def get_rank(member: discord.Member):
+def get_rank(member: discord.Member, guild: discord.Guild):
 
-    result = db.fetchone(
+    staff = db.fetchone(
         "staff_members",
         "user_id = ? AND guild_id = ?",
-        (member.id, member.guild.id)
+        (member.id, guild.id)
     )
 
-    if result:
-        return result[2]
+    if not staff:
+        return None
 
-    return None
+    return staff[2]
 
 
 async def get_staff_role(guild: discord.Guild, rank: str):
 
-    result = db.fetchone(
+    role_data = db.fetchone(
         "staff_roles",
         "guild_id = ? AND rank = ?",
         (guild.id, rank)
     )
 
-    if result:
+    if role_data:
 
-        role = guild.get_role(result[2])
+        role = guild.get_role(role_data[2])
 
         if role:
             return role
 
+        db.delete(
+            "staff_roles",
+            "guild_id = ? AND rank = ?",
+            (guild.id, rank)
+        )
+
     role = await guild.create_role(
         name=rank,
-        reason="Creating staff rank role"
+        reason="Staff rank role"
     )
 
-    db.insert_replace(
+    db.insert(
         "staff_roles",
         "guild_id, rank, role_id",
         (guild.id, rank, role.id)
@@ -147,50 +154,76 @@ def get_registered_staff_roles(guild: discord.Guild):
     return roles
 
 
-async def change_staff_rank(
-    member: discord.Member,
-    new_rank: str,
-    added_by: int
-):
+async def change_staff_rank(interaction, member, direction):
 
-    if new_rank not in STAFF_RANKS:
-        raise ValueError("Invalid staff rank.")
+    guild = interaction.guild
 
-    old_rank = get_rank(member)
-
-    if old_rank:
-
-        old_role_data = db.fetchone(
-            "staff_roles",
-            "guild_id = ? AND rank = ?",
-            (member.guild.id, old_rank)
-        )
-
-        if old_role_data:
-
-            old_role = member.guild.get_role(old_role_data[2])
-
-            if old_role:
-                await member.remove_roles(old_role)
-
-    new_role = await get_staff_role(
-        member.guild,
-        new_rank
-    )
-
-    await member.add_roles(new_role)
-
-    db.insert_replace(
+    staff = db.fetchone(
         "staff_members",
-        "user_id, guild_id, rank, joined_at, added_by",
-        (
-            member.id,
-            member.guild.id,
-            new_rank,
-            int(time.time()),
-            added_by
-        )
+        "user_id = ? AND guild_id = ?",
+        (member.id, guild.id)
     )
+
+    if not staff:
+        await interaction.response.send_message(
+            "This member is not a staff member."
+        )
+        return
+
+    current_rank = staff[2]
+    current_level = STAFF_RANKS.get(current_rank)
+
+    if current_level is None:
+        await interaction.response.send_message(
+            "This member has an invalid staff rank."
+        )
+        return
+
+    new_level = current_level + direction
+
+    new_rank = next(
+        (
+            rank
+            for rank, level in STAFF_RANKS.items()
+            if level == new_level
+        ),
+        None
+    )
+
+    if new_rank is None:
+        await interaction.response.send_message(
+            "This member is already at the highest or lowest rank."
+        )
+        return
+
+    await interaction.response.defer()
+
+    try:
+
+        old_role = await get_staff_role(guild, current_rank)
+        new_role = await get_staff_role(guild, new_rank)
+
+        await member.add_roles(new_role)
+        await member.remove_roles(old_role)
+
+        db.update(
+            "staff_members",
+            "rank = ?",
+            "user_id = ? AND guild_id = ?",
+            (new_rank, member.id, guild.id)
+        )
+
+        await interaction.followup.send(
+            f"{member.mention} has been "
+            f"{'promoted' if direction == 1 else 'demoted'} "
+            f"from **{current_rank}** to **{new_rank}**."
+        )
+
+    except discord.HTTPException:
+        await interaction.followup.send(
+            "I couldn't update the member's Discord roles. "
+            "Check my role permissions and hierarchy."
+        )
 
 
 # =========================================================
@@ -199,28 +232,31 @@ async def change_staff_rank(
 
 async def get_owner_role(guild: discord.Guild):
 
-    result = db.fetchone(
+    role_data = db.fetchone(
         "owner_roles",
         "guild_id = ?",
         (guild.id,)
     )
 
-    # Retrieve the role using its saved ID.
-    if result:
+    if role_data:
 
-        role = guild.get_role(result[1])
+        role = guild.get_role(role_data[1])
 
         if role:
             return role
 
-    # The saved role no longer exists, so create a replacement.
+        db.delete(
+            "owner_roles",
+            "guild_id = ?",
+            (guild.id,)
+        )
+
     role = await guild.create_role(
         name="Owner",
         reason="Creating server owner role"
     )
 
-    # Save the new role ID.
-    db.insert_replace(
+    db.insert(
         "owner_roles",
         "guild_id, role_id",
         (guild.id, role.id)
@@ -250,14 +286,6 @@ async def assign_owner_role(guild: discord.Guild):
 # APPLICATION FUNCTIONS
 # =========================================================
 
-def get_application_lock(channel_id: int):
-
-    if channel_id not in application_locks:
-        application_locks[channel_id] = asyncio.Lock()
-
-    return application_locks[channel_id]
-
-
 def get_application(channel: discord.TextChannel):
 
     return db.fetchone(
@@ -267,26 +295,12 @@ def get_application(channel: discord.TextChannel):
     )
 
 
-async def close_application_channel(
-    channel: discord.TextChannel
-):
+def get_application_lock(channel_id: int):
 
-    overwrites = {}
+    if channel_id not in application_locks:
+        application_locks[channel_id] = asyncio.Lock()
 
-    for target, overwrite in channel.overwrites.items():
-
-        if target.id == channel.guild.me.id:
-            continue
-
-        overwrite.send_messages = False
-        overwrites[target] = overwrite
-
-    await channel.edit(
-        overwrites={
-            **channel.overwrites,
-            **overwrites
-        }
-    )
+    return application_locks[channel_id]
 
 
 async def claim_reviewer(
@@ -301,16 +315,66 @@ async def claim_reviewer(
         if not application:
             return False
 
-        reviewer_id = application[3]
-        status = application[4]
-
-        if reviewer_id is not None:
+        if application[3] is not None:
             return False
 
-        if status != "pending":
+        if application[4] != "pending":
             return False
 
-        if not get_rank(member):
+        if not get_rank(member, channel.guild):
+            return False
+
+        applicant = channel.guild.get_member(application[2])
+
+        if applicant is None:
+            return False
+
+        # Build new permissions.
+        overwrites = {
+            channel.guild.default_role:
+                discord.PermissionOverwrite(
+                    view_channel=False
+                ),
+
+            applicant:
+                discord.PermissionOverwrite(
+                    view_channel=True,
+                    send_messages=True,
+                    read_message_history=True
+                ),
+
+            member:
+                discord.PermissionOverwrite(
+                    view_channel=True,
+                    send_messages=True,
+                    read_message_history=True
+                ),
+
+            channel.guild.me:
+                discord.PermissionOverwrite(
+                    view_channel=True,
+                    send_messages=True,
+                    read_message_history=True,
+                    manage_channels=True
+                )
+        }
+
+        # Explicitly remove access from all staff roles.
+        # The reviewer receives their own member overwrite.
+        for role in get_registered_staff_roles(channel.guild):
+
+            overwrites[role] = discord.PermissionOverwrite(
+                view_channel=False
+            )
+
+        try:
+
+            await channel.edit(
+                overwrites=overwrites,
+                topic=f"Application reviewer: {member.id}"
+            )
+
+        except discord.HTTPException:
             return False
 
         db.update(
@@ -320,60 +384,26 @@ async def claim_reviewer(
             (member.id, "reviewing", channel.id)
         )
 
-        try:
-
-            applicant = channel.guild.get_member(
-                application[2]
-            )
-
-            overwrites = {
-                channel.guild.default_role: discord.PermissionOverwrite(
-                    view_channel=False
-                ),
-                member: discord.PermissionOverwrite(
-                    view_channel=True,
-                    send_messages=True,
-                    read_message_history=True
-                )
-            }
-
-            if applicant:
-                overwrites[applicant] = discord.PermissionOverwrite(
-                    view_channel=True,
-                    send_messages=True,
-                    read_message_history=True
-                )
-
-            bot_member = channel.guild.me
-
-            overwrites[bot_member] = discord.PermissionOverwrite(
-                view_channel=True,
-                send_messages=True,
-                read_message_history=True,
-                manage_channels=True
-            )
-
-            await channel.edit(
-                overwrites=overwrites,
-                topic=f"Application reviewer: {member.id}"
-            )
-
-        except discord.HTTPException:
-
-            db.update(
-                "staff_applications",
-                "reviewer_id = ?, status = ?",
-                "channel_id = ?",
-                (None, "pending", channel.id)
-            )
-
-            raise
-
         await channel.send(
-            f"{member.mention} has taken responsibility for this application."
+            f"{member.mention} has been assigned as this application's reviewer."
         )
 
         return True
+
+
+async def close_application_channel(channel: discord.TextChannel):
+
+    overwrites = dict(channel.overwrites)
+
+    for target, overwrite in overwrites.items():
+
+        if target == channel.guild.me:
+            continue
+
+        overwrite.send_messages = False
+        overwrites[target] = overwrite
+
+    await channel.edit(overwrites=overwrites)
 
 
 async def require_application(ctx):
@@ -384,9 +414,11 @@ async def require_application(ctx):
     application = get_application(ctx.channel)
 
     if not application:
+
         await ctx.reply(
             "This command can only be used in an application channel."
         )
+
         return None
 
     return application
@@ -401,10 +433,16 @@ async def require_reviewer(ctx):
 
     reviewer_id = application[3]
 
+    # No reviewer yet: first registered staff member
+    # using a command can claim the application.
     if reviewer_id is None:
 
-        if not get_rank(ctx.author):
-            await ctx.reply("You are not a registered staff member.")
+        if not get_rank(ctx.author, ctx.guild):
+
+            await ctx.reply(
+                "You are not a registered staff member."
+            )
+
             return None
 
         claimed = await claim_reviewer(
@@ -413,11 +451,16 @@ async def require_reviewer(ctx):
         )
 
         if not claimed:
-            await ctx.reply("This application has already been claimed.")
+
+            await ctx.reply(
+                "This application could not be claimed."
+            )
+
             return None
 
-        return application
+        return get_application(ctx.channel)
 
+    # Reviewer or server administrator.
     if (
         ctx.author.id != reviewer_id
         and not ctx.author.guild_permissions.administrator
@@ -426,13 +469,14 @@ async def require_reviewer(ctx):
         await ctx.reply(
             "Only the assigned reviewer can use this command."
         )
+
         return None
 
     return application
 
 
 # =========================================================
-# STAFF APPLICATION PANEL
+# STAFF PANEL VIEW
 # =========================================================
 
 class StaffPanel(discord.ui.View):
@@ -441,28 +485,21 @@ class StaffPanel(discord.ui.View):
 
         super().__init__(timeout=None)
 
-        self.enabled = enabled
-
-        self.join_button.label = (
-            "Join Staff" if enabled else "Currently Closed"
-        )
-
-        self.join_button.style = (
-            discord.ButtonStyle.success
-            if enabled
-            else discord.ButtonStyle.danger
-        )
-
-        self.join_button.emoji = (
-            "➕" if enabled else "⛔"
-        )
-
         self.join_button.disabled = not enabled
+
+        if enabled:
+            self.join_button.label = "Join Staff"
+            self.join_button.style = discord.ButtonStyle.success
+            self.join_button.emoji = "➕"
+
+        else:
+            self.join_button.label = "Currently Closed"
+            self.join_button.style = discord.ButtonStyle.danger
+            self.join_button.emoji = "⛔"
 
     @discord.ui.button(
         label="Join Staff",
-        style=discord.ButtonStyle.success,
-        emoji="➕",
+        style=discord.ButtonStyle.primary,
         custom_id="staff:join"
     )
     async def join_button(
@@ -474,13 +511,13 @@ class StaffPanel(discord.ui.View):
         guild = interaction.guild
         member = interaction.user
 
-        panel = db.fetchone(
+        panel_data = db.fetchone(
             "staff_panel",
             "guild_id = ?",
             (guild.id,)
         )
 
-        if not panel or not panel[3]:
+        if not panel_data or not panel_data[3]:
 
             await interaction.response.send_message(
                 "Staff applications are currently closed.",
@@ -488,7 +525,7 @@ class StaffPanel(discord.ui.View):
             )
             return
 
-        if get_rank(member):
+        if get_rank(member, guild):
 
             await interaction.response.send_message(
                 "You are already a staff member.",
@@ -522,26 +559,29 @@ class StaffPanel(discord.ui.View):
 
             return
 
-        category = interaction.channel.category
+        staff_roles = get_registered_staff_roles(guild)
 
         overwrites = {
-            guild.default_role: discord.PermissionOverwrite(
-                view_channel=False
-            ),
-            member: discord.PermissionOverwrite(
-                view_channel=True,
-                send_messages=True,
-                read_message_history=True
-            ),
-            guild.me: discord.PermissionOverwrite(
-                view_channel=True,
-                send_messages=True,
-                read_message_history=True,
-                manage_channels=True
-            )
-        }
+            guild.default_role:
+                discord.PermissionOverwrite(
+                    view_channel=False
+                ),
 
-        staff_roles = get_registered_staff_roles(guild)
+            member:
+                discord.PermissionOverwrite(
+                    view_channel=True,
+                    send_messages=True,
+                    read_message_history=True
+                ),
+
+            guild.me:
+                discord.PermissionOverwrite(
+                    view_channel=True,
+                    send_messages=True,
+                    read_message_history=True,
+                    manage_channels=True
+                )
+        }
 
         for role in staff_roles:
 
@@ -551,12 +591,24 @@ class StaffPanel(discord.ui.View):
                 read_message_history=True
             )
 
-        channel = await guild.create_text_channel(
-            name=f"application-{member.name}",
-            category=category,
-            overwrites=overwrites,
-            topic=f"Staff application by {member.id}"
-        )
+        try:
+
+            channel = await guild.create_text_channel(
+                name=f"application-{member.name}",
+                category=interaction.channel.category,
+                overwrites=overwrites,
+                topic=f"Staff application by {member.id}"
+            )
+
+        except discord.HTTPException:
+
+            await interaction.response.send_message(
+                "I couldn't create your application channel. "
+                "Check my channel permissions.",
+                ephemeral=True
+            )
+
+            return
 
         db.insert(
             "staff_applications",
@@ -571,14 +623,18 @@ class StaffPanel(discord.ui.View):
             )
         )
 
-        mentions = " ".join(
+        role_mentions = " ".join(
             role.mention for role in staff_roles
         )
 
         await channel.send(
-            f"{member.mention} welcome!\n"
-            f"{mentions}\n\n"
-            "A staff member will review your application when available."
+            f"{member.mention} welcome to your staff application!\n"
+            f"{role_mentions}\n\n"
+            "A staff member will review your application when available.",
+            allowed_mentions=discord.AllowedMentions(
+                users=True,
+                roles=True
+            )
         )
 
         await interaction.response.send_message(
@@ -607,7 +663,7 @@ async def application_message_listener(message: discord.Message):
     if application[4] != "pending":
         return
 
-    if not get_rank(message.author):
+    if not get_rank(message.author, message.guild):
         return
 
     await claim_reviewer(
@@ -629,13 +685,12 @@ async def application_help(ctx):
         return
 
     embed = discord.Embed(
-        title="Staff Application Commands",
+        title="Application Commands",
         description=(
-            "Prefix - `Lilith`\n"
-            "`help` - Show this help message\n"
-            "`confirm` - Accept the applicant\n"
-            "`close` - Close the application\n"
-            "`invite @member/@role` - Give someone access"
+            "`help` - Show application commands\n"
+            "`Confirm` - Accept the applicant\n"
+            "`Close` - Close the application\n"
+            "`Invite @member/@role` - Invite staff"
         ),
         color=discord.Color.blue()
     )
@@ -643,7 +698,7 @@ async def application_help(ctx):
     await ctx.reply(embed=embed)
 
 
-@commands.command(name="confirm")
+@commands.command(name="Confirm")
 async def confirm_application(ctx):
 
     application = await require_reviewer(ctx)
@@ -652,7 +707,10 @@ async def confirm_application(ctx):
         return
 
     if application[4] not in ("pending", "reviewing"):
-        await ctx.reply("This application is no longer active.")
+
+        await ctx.reply(
+            "This application is no longer active."
+        )
         return
 
     guild = ctx.guild
@@ -661,12 +719,16 @@ async def confirm_application(ctx):
 
     if applicant is None:
 
-        await ctx.reply("The applicant is no longer in this server.")
+        await ctx.reply(
+            "The applicant is no longer in this server."
+        )
         return
 
-    if get_rank(applicant):
+    if get_rank(applicant, guild):
 
-        await ctx.reply("This member is already staff.")
+        await ctx.reply(
+            "This member is already a staff member."
+        )
         return
 
     role = await get_staff_role(
@@ -674,10 +736,19 @@ async def confirm_application(ctx):
         "Support Team"
     )
 
-    await applicant.add_roles(
-        role,
-        reason=f"Staff application accepted by {ctx.author}"
-    )
+    try:
+
+        await applicant.add_roles(
+            role,
+            reason=f"Application accepted by {ctx.author}"
+        )
+
+    except discord.HTTPException:
+
+        await ctx.reply(
+            "I couldn't assign the Support Team role."
+        )
+        return
 
     db.insert_replace(
         "staff_members",
@@ -699,13 +770,14 @@ async def confirm_application(ctx):
     )
 
     await ctx.send(
-        f"Congratulations {applicant.mention}! Your application has been accepted."
+        f"Congratulations {applicant.mention}! "
+        "Your application has been accepted."
     )
 
     await close_application_channel(ctx.channel)
 
 
-@commands.command(name="close")
+@commands.command(name="Close")
 async def close_application(ctx):
 
     application = await require_reviewer(ctx)
@@ -720,12 +792,14 @@ async def close_application(ctx):
         ("closed", ctx.channel.id)
     )
 
-    await ctx.send("This application has been closed.")
+    await ctx.send(
+        "This application has been closed."
+    )
 
     await close_application_channel(ctx.channel)
 
 
-@commands.command(name="invite")
+@commands.command(name="Invite")
 async def invite_application(
     ctx,
     target: discord.Member | discord.Role
@@ -736,9 +810,16 @@ async def invite_application(
     if not application:
         return
 
+    if application[4] not in ("pending", "reviewing"):
+
+        await ctx.reply(
+            "This application is no longer active."
+        )
+        return
+
     if isinstance(target, discord.Member):
 
-        if not get_rank(target):
+        if not get_rank(target, ctx.guild):
 
             await ctx.reply(
                 "You can only invite registered staff members."
@@ -756,12 +837,21 @@ async def invite_application(
             )
             return
 
-    await ctx.channel.set_permissions(
-        target,
-        view_channel=True,
-        send_messages=True,
-        read_message_history=True
-    )
+    try:
+
+        await ctx.channel.set_permissions(
+            target,
+            view_channel=True,
+            send_messages=True,
+            read_message_history=True
+        )
+
+    except discord.HTTPException:
+
+        await ctx.reply(
+            "I couldn't give this member or role access."
+        )
+        return
 
     await ctx.send(
         f"{target.mention} has been invited to this application."
@@ -769,7 +859,7 @@ async def invite_application(
 
 
 # =========================================================
-# STAFF SLASH COMMANDS
+# SLASH COMMAND GROUP
 # =========================================================
 
 staff_commands = app_commands.Group(
@@ -778,84 +868,105 @@ staff_commands = app_commands.Group(
 )
 
 
+# ---------------- STAFF ADD ----------------
+
 @staff_commands.command(
     name="add",
     description="Add a member to the staff team"
 )
-@app_commands.describe(
-    member="The member to add",
-    rank="The staff rank"
-)
-@app_commands.choices(
-    rank=[
-        app_commands.Choice(name=rank, value=rank)
-        for rank in STAFF_RANKS
-    ]
-)
-async def staff_add(
+async def add(
     interaction: discord.Interaction,
-    member: discord.Member,
-    rank: app_commands.Choice[str]
+    member: discord.Member
 ):
 
-    if not interaction.user.guild_permissions.administrator:
+    st_rank = "Support Team"
 
-        await interaction.response.send_message(
-            "You need administrator permissions.",
-            ephemeral=True
-        )
-        return
-
-    if get_rank(member):
-
-        await interaction.response.send_message(
-            "This member is already staff.",
-            ephemeral=True
-        )
-        return
-
-    await change_staff_rank(
-        member,
-        rank.value,
-        interaction.user.id
+    staff_member = db.fetchone(
+        "staff_members",
+        "user_id = ? AND guild_id = ?",
+        (member.id, interaction.guild.id)
     )
+
+    if staff_member:
+
+        await interaction.response.send_message(
+            "This member is already a staff member."
+        )
+        return
+
+    if member.bot:
+
+        await interaction.response.send_message(
+            "A bot can't be a staff member."
+        )
+        return
+
+    role = await get_staff_role(
+        interaction.guild,
+        st_rank
+    )
+
+    try:
+
+        await member.add_roles(role)
+
+    except discord.HTTPException:
+
+        await interaction.response.send_message(
+            "I couldn't assign the staff role."
+        )
+        return
+
+    actor = interaction.user
+
+    db.insert(
+        "staff_members",
+        "user_id, guild_id, rank, joined_at, added_by",
+        (
+            member.id,
+            interaction.guild.id,
+            st_rank,
+            int(time.time()),
+            actor.id
+        )
+    )
+
+    rank = get_rank(member, interaction.guild)
 
     await interaction.response.send_message(
-        f"{member.mention} has been added as **{rank.value}**."
+        f"{member.mention} has been added by "
+        f"{actor.mention} as a **{rank}** staff member."
     )
 
+
+# ---------------- STAFF REMOVE ----------------
 
 @staff_commands.command(
     name="remove",
     description="Remove a member from the staff team"
 )
-async def staff_remove(
+async def remove(
     interaction: discord.Interaction,
     member: discord.Member
 ):
 
-    if not interaction.user.guild_permissions.administrator:
+    mem = db.fetchone(
+        "staff_members",
+        "user_id = ? AND guild_id = ?",
+        (member.id, interaction.guild.id)
+    )
+
+    if not mem:
 
         await interaction.response.send_message(
-            "You need administrator permissions.",
-            ephemeral=True
-        )
-        return
-
-    current_rank = get_rank(member)
-
-    if not current_rank:
-
-        await interaction.response.send_message(
-            "This member is not staff.",
-            ephemeral=True
+            "This member is not a staff member."
         )
         return
 
     role_data = db.fetchone(
         "staff_roles",
         "guild_id = ? AND rank = ?",
-        (interaction.guild.id, current_rank)
+        (interaction.guild.id, mem[2])
     )
 
     if role_data:
@@ -863,7 +974,16 @@ async def staff_remove(
         role = interaction.guild.get_role(role_data[2])
 
         if role:
-            await member.remove_roles(role)
+
+            try:
+                await member.remove_roles(role)
+
+            except discord.HTTPException:
+
+                await interaction.response.send_message(
+                    "I couldn't remove the Discord role."
+                )
+                return
 
     db.delete(
         "staff_members",
@@ -872,155 +992,59 @@ async def staff_remove(
     )
 
     await interaction.response.send_message(
-        f"{member.mention} has been removed from the staff team."
+        f"{member.mention} is no longer a staff member."
     )
 
+
+# ---------------- STAFF PROMOTE ----------------
 
 @staff_commands.command(
     name="promote",
     description="Promote a staff member"
 )
-async def staff_promote(
+async def promote(
     interaction: discord.Interaction,
     member: discord.Member
 ):
 
-    if not interaction.user.guild_permissions.administrator:
-
-        await interaction.response.send_message(
-            "You need administrator permissions.",
-            ephemeral=True
-        )
-        return
-
-    current_rank = get_rank(member)
-
-    if not current_rank:
-
-        await interaction.response.send_message(
-            "This member is not staff.",
-            ephemeral=True
-        )
-        return
-
-    current_level = STAFF_RANKS[current_rank]
-
-    next_rank = next(
-        (
-            rank for rank, level in STAFF_RANKS.items()
-            if level == current_level + 1
-        ),
-        None
-    )
-
-    if not next_rank:
-
-        await interaction.response.send_message(
-            "This member is already at the highest staff rank.",
-            ephemeral=True
-        )
-        return
-
     await change_staff_rank(
+        interaction,
         member,
-        next_rank,
-        interaction.user.id
+        1
     )
 
-    await interaction.response.send_message(
-        f"{member.mention} has been promoted to **{next_rank}**."
-    )
 
+# ---------------- STAFF DEMOTE ----------------
 
 @staff_commands.command(
     name="demote",
     description="Demote a staff member"
 )
-async def staff_demote(
+async def demote(
     interaction: discord.Interaction,
     member: discord.Member
 ):
 
-    if not interaction.user.guild_permissions.administrator:
-
-        await interaction.response.send_message(
-            "You need administrator permissions.",
-            ephemeral=True
-        )
-        return
-
-    current_rank = get_rank(member)
-
-    if not current_rank:
-
-        await interaction.response.send_message(
-            "This member is not staff.",
-            ephemeral=True
-        )
-        return
-
-    current_level = STAFF_RANKS[current_rank]
-
-    next_rank = next(
-        (
-            rank for rank, level in STAFF_RANKS.items()
-            if level == current_level - 1
-        ),
-        None
-    )
-
-    if not next_rank:
-
-        await interaction.response.send_message(
-            "This member is already at the lowest staff rank.",
-            ephemeral=True
-        )
-        return
-
     await change_staff_rank(
+        interaction,
         member,
-        next_rank,
-        interaction.user.id
-    )
-
-    await interaction.response.send_message(
-        f"{member.mention} has been demoted to **{next_rank}**."
+        -1
     )
 
 
-# =========================================================
-# STAFF PANEL COMMAND
-# =========================================================
+# ---------------- STAFF PANEL ----------------
 
 @staff_commands.command(
     name="panel",
-    description="Create the staff application panel"
+    description="Send the staff panel"
 )
-async def staff_panel(
-    interaction: discord.Interaction,
-    channel: discord.TextChannel
-):
+async def panel(interaction: discord.Interaction):
 
-    if not interaction.user.guild_permissions.administrator:
+    view = StaffPanel()
 
-        await interaction.response.send_message(
-            "You need administrator permissions.",
-            ephemeral=True
-        )
-        return
-
-    embed = discord.Embed(
-        title="Join Our Staff Team",
-        description=(
-            "Interested in becoming part of our staff team?\n"
-            "Click the button below to open a staff application."
-        ),
-        color=discord.Color.blue()
-    )
-
-    message = await channel.send(
-        embed=embed,
-        view=StaffPanel(enabled=True)
+    message = await interaction.channel.send(
+        "## Staff Panel\nClick below to interact.",
+        view=view
     )
 
     db.insert_replace(
@@ -1028,21 +1052,19 @@ async def staff_panel(
         "guild_id, channel_id, message_id, enabled",
         (
             interaction.guild.id,
-            channel.id,
+            interaction.channel.id,
             message.id,
             1
         )
     )
 
     await interaction.response.send_message(
-        f"Staff panel created in {channel.mention}.",
+        "Staff panel created!",
         ephemeral=True
     )
 
 
-# =========================================================
-# APPLICATION TOGGLE COMMANDS
-# =========================================================
+# ---------------- STAFF APPLICATION ----------------
 
 @staff_commands.command(
     name="application",
@@ -1066,6 +1088,7 @@ async def application(
     )
 
     if not data:
+
         await interaction.response.send_message(
             "No staff panel has been created yet."
         )
@@ -1076,23 +1099,21 @@ async def application(
     channel = interaction.guild.get_channel(data[1])
 
     if not channel:
+
         await interaction.response.send_message(
             "The staff panel channel no longer exists."
         )
         return
 
     try:
+
         message = await channel.fetch_message(data[2])
 
         embed = discord.Embed(
-            title=(
-                "OPENED"
-                if enabled
-                else "CLOSED"
-            ),
+            title="OPENED" if enabled else "CLOSED",
             description=(
                 "Click below to join our staff team of our Community!"
-                if enabled 
+                if enabled
                 else "Our Community isn't in need for more staff members at the moment."
             ),
             color=(
@@ -1119,10 +1140,10 @@ async def application(
         )
 
     except discord.NotFound:
+
         await interaction.response.send_message(
             "The staff panel message no longer exists."
         )
-
 
 
 # =========================================================
@@ -1135,13 +1156,8 @@ def setup(bot):
 
     bot.add_view(StaffPanel())
 
-    bot.add_listener(
-        application_message_listener,
-        "on_message"
-    )
-
-    # Register application prefix commands.
-    # Remove the default help command to avoid a name conflict.
+    # The custom application help command uses "help".
+    # Remove discord.py's default help command to avoid conflict.
     bot.remove_command("help")
 
     bot.add_command(application_help)
@@ -1149,7 +1165,14 @@ def setup(bot):
     bot.add_command(close_application)
     bot.add_command(invite_application)
 
-    # on_ready receives no arguments, so use a closure.
+    bot.add_listener(
+        application_message_listener,
+        "on_message"
+    )
+
+    # Owner role assignment.
+    # on_ready does not receive a bot argument, so use a closure.
+
     async def assign_all_owner_roles():
 
         for guild in bot.guilds:
