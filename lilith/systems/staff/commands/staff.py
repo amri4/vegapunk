@@ -1127,6 +1127,8 @@ async def application(
                 else discord.Color.red()
             )
         )
+        if enabled:
+            embed.set_image(url="https://cdn.discordapp.com/attachments/1570201709513547867/1575865416709050481/file_00000000bc788210b409369fb5984400.png?ex=6b0ad689&is=6b098509&hm=8ec26c8396fbff3e19bc55968ac5d7b4f3966e5e2bceacc7589312cd064a36b6&")
 
         await message.edit(
             embed=embed,
