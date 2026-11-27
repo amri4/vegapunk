@@ -775,6 +775,7 @@ async def confirm_application(ctx):
     )
 
     await close_application_channel(ctx.channel)
+    await asyncio.sleep(120)
 
 
 @commands.command(name="Close")
@@ -793,10 +794,12 @@ async def close_application(ctx):
     )
 
     await ctx.send(
-        "This application has been closed."
+        "This application has been closed, this channel will be deleted in 5 minuits."
     )
 
     await close_application_channel(ctx.channel)
+    await asyncio.sleep(300)
+    await interaction.channel.delete()
 
 
 @commands.command(name="Invite")
