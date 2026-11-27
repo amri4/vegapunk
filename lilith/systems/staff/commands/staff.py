@@ -777,6 +777,7 @@ async def confirm_application(ctx):
 
     await close_application_channel(ctx.channel)
     await asyncio.sleep(120)
+    await interaction.channel.delete()
 
 
 @commands.command(name="Close")
