@@ -287,6 +287,10 @@ async def assign_owner_role(guild: discord.Guild):
 # APPLICATION FUNCTIONS
 # =========================================================
 
+def is_server_owner(member: discord.Member):
+
+    return member.id == member.guild.owner_id
+
 def get_application(channel: discord.TextChannel):
 
     return db.fetchone(
@@ -322,7 +326,10 @@ async def claim_reviewer(
         if application[4] != "pending":
             return False
 
-        if not get_rank(member, channel.guild):
+        if (
+            not is_server_owner(member)
+            and not get_rank(member, channel.guild)
+        ):
             return False
 
         applicant = channel.guild.get_member(application[2])
@@ -438,7 +445,10 @@ async def require_reviewer(ctx):
     # using a command can claim the application.
     if reviewer_id is None:
 
-        if not get_rank(ctx.author, ctx.guild):
+        if (
+            not is_server_owner(ctx.author)
+            and not get_rank(ctx.author, ctx.guild)
+        ):
 
             await ctx.reply(
                 "You are not a registered staff member."
@@ -777,7 +787,7 @@ async def confirm_application(ctx):
 
     await close_application_channel(ctx.channel)
     await asyncio.sleep(120)
-    await interaction.channel.delete()
+    await ctx.channel.delete()
 
 
 @commands.command(name="Close")
@@ -801,7 +811,7 @@ async def close_application(ctx):
 
     await close_application_channel(ctx.channel)
     await asyncio.sleep(300)
-    await interaction.channel.delete()
+    await ctx.channel.delete()
 
 
 @commands.command(name="Invite")
