@@ -674,7 +674,10 @@ async def application_message_listener(message: discord.Message):
     if application[4] != "pending":
         return
 
-    if not get_rank(message.author, message.guild):
+    if (
+        not is_server_owner(message.author)
+        and not get_rank(message.author, message.guild)
+    ):
         return
 
     await claim_reviewer(
