@@ -689,7 +689,7 @@ async def application_help(ctx):
         title="Application Commands",
         description=(
             "`help` - Show application commands\n"
-            "`Confirm` - Accept the applicant\n"
+            "`confirm` - Accept the applicant\n"
             "`Close` - Close the application\n"
             "`Invite @member/@role` - Invite staff"
         ),
@@ -699,7 +699,7 @@ async def application_help(ctx):
     await ctx.reply(embed=embed)
 
 
-@commands.command(name="Confirm")
+@commands.command(name="confirm")
 async def confirm_application(ctx):
 
     application = await require_reviewer(ctx)
