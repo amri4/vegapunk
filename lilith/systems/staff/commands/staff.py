@@ -5,6 +5,7 @@ from discord import app_commands
 from discord.ext import commands
 import mycord
 import time
+import asyncio
 
 
 db = mycord.DB()
