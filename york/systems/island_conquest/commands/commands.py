@@ -10,6 +10,7 @@ db.create_table(
     user_id INTEGER,
     guild_id INTEGER,
     island_name TEXT,
+    post_id INTEGER,
     PRIMARY KEY(user_id, guild_id)
     """
 )
@@ -17,28 +18,29 @@ db.create_table(
     "game_channels",
     """
     guild_id INTEGER PRIMARY KEY,
-    forum_id INTEGER,
-    post_id INTEGER
+    forum_id INTEGER
     """
 )
 
 #-----------FUNCTIONS------------
 # SETUP ISLAND FORUM
-async def setup_island_forum(guild: discord.Guild, text):
+async def setup_island_forum(interaction: discord.Interaction, guild: discord.Guild, text: str):
 
     # Get saved data
-    data = db.fetchone(
+    data_channels = db.fetchone(
         "game_channels",
         "guild_id = ?",
         (guild.id,)
     )
+    data_profile = db.fetchone(
+        "profiles",
+        "user_id = ? AND guild_id = ?",
+        (interaction.user.id, guild.id)
+    )
 
     # Unpack database result
-    if data:
-        _, forum_id, post_id = data
-    else:
-        forum_id = None
-        post_id = None
+    forum_id = data_channels[1] if data_channels else None
+    post_id = data_profile[3] if data_profile else None
 
     # Check forum
     forum = guild.get_channel(forum_id) if forum_id else None
@@ -64,7 +66,7 @@ async def setup_island_forum(guild: discord.Guild, text):
     if not isinstance(post, discord.Thread):
 
         post, message = await forum.create_thread(
-            name=f"{text}",
+            name=text,
             content="Welcome to Island Conquest! 🏝️"
         )
 
@@ -73,8 +75,15 @@ async def setup_island_forum(guild: discord.Guild, text):
     # Save IDs
     db.insert_replace(
         "game_channels",
-        "guild_id, forum_id, post_id",
-        (guild.id, forum_id, post_id)
+        "guild_id, forum_id",
+        (guild.id, forum_id)
+    )
+    db.update(
+        "profiles",
+        "post_id = ?",
+        (post.id,),
+        "user_id = ? AND guild_id = ?",
+        (interaction.user.id, guild.id)
     )
 
     return forum, post
@@ -93,14 +102,28 @@ async def create_profile(
     interaction: discord.Interaction,
     island_name: str
 ):
-    player_exists = db.fetchone(
+    await interaction.response.defer(ephemeral=True)
+    
+    player_exists = db.exists(
         "profiles",
         "user_id = ? AND guild_id = ?",
         (interaction.user.id, interaction.guild.id)
     )
+
+    island_exists = db.exists(
+        "profiles",
+        "island_name = ? COLLATE NOCASE AND guild_id = ?",
+        (island_name, interaction.guild.id)
+    )
     if player_exists:
-        await interaction.response.send_message(
+        await interaction.followup.send(
             "You already have a profile",
+            ephemeral=True
+        )
+        return
+    if island_exists:
+        await interaction.followup.send(
+            "This island already exists, try another name",
             ephemeral=True
         )
         return
@@ -109,10 +132,10 @@ async def create_profile(
         "user_id, guild_id, island_name",
         (interaction.user.id, interaction.guild.id, island_name)
     )
-    forum, post = await setup_island_forum(interaction.guild, island_name)
+    forum, post = await setup_island_forum(interaction, interaction.guild, island_name)
 
-    await interaction.response.send_message(
-        "Profile created. Here is your island:\n"
+    await interaction.followup.send(
+        "Your island has been created!\n"
         f"{post.mention}"
     )
 
