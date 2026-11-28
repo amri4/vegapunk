@@ -85,7 +85,7 @@ conquest_commands = app_commands.Group(
     description="island conquest commands"
 )
 
-conquest_commands.command(
+@conquest_commands.command(
     name="create_profile",
     description="create your island conquest profile"
 )
