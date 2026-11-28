@@ -13,6 +13,25 @@ db.create_table(
     PRIMARY KEY(user_id, guild_id)
     """
 )
+db.create_table(
+    "game_channels",
+    """
+    guild_id INTEGER PRIMARY KEY,
+    forum_id INTEGER,
+    post_id INTEGER
+    """
+)
+
+#-----------FUNCTIONS------------
+async def setup_island_forum(guild: discord.Guild):
+    data = db.fetchone(
+        "game_channels",
+        "guild_id = ?",
+        (guild.id,)
+    )
+    
+
+#-----------COMMANDS------------
 conquest_commands = app_commands.Group(
     name="conquest",
     description="island conquest commands"
