@@ -23,7 +23,8 @@ db.create_table(
 )
 
 #-----------FUNCTIONS------------
-async def setup_island_forum(guild: discord.Guild):
+# SETUP ISLAND FORUM
+async def setup_island_forum(guild: discord.Guild, text):
 
     # Get saved data
     data = db.fetchone(
@@ -63,7 +64,7 @@ async def setup_island_forum(guild: discord.Guild):
     if not isinstance(post, discord.Thread):
 
         post, message = await forum.create_thread(
-            name="Island Conquest",
+            name=f"{text}",
             content="Welcome to Island Conquest! 🏝️"
         )
 
@@ -108,4 +109,9 @@ async def create_profile(
         "user_id, guild_id, island_name",
         (interaction.user.id, interaction.guild.id, island_name)
     )
-    
+    forum, post = await setup_island_forum(interaction.guild, name)
+
+    await interaction.response.send_message(
+        "Profile created. Here is your island:\n"
+        f"{post.mention}"
+    )
