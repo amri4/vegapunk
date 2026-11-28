@@ -24,12 +24,59 @@ db.create_table(
 
 #-----------FUNCTIONS------------
 async def setup_island_forum(guild: discord.Guild):
+
+    # Get saved data
     data = db.fetchone(
         "game_channels",
         "guild_id = ?",
         (guild.id,)
     )
-    
+
+    # Unpack database result
+    if data:
+        _, forum_id, post_id = data
+    else:
+        forum_id = None
+        post_id = None
+
+    # Check forum
+    forum = guild.get_channel(forum_id) if forum_id else None
+
+    if not isinstance(forum, discord.ForumChannel):
+
+        forum = await guild.create_forum(
+            name="island-conquest"
+        )
+
+        forum_id = forum.id
+        post_id = None
+
+    # Check post
+    post = None
+
+    if post_id:
+        try:
+            post = await guild.fetch_channel(post_id)
+        except discord.NotFound:
+            post = None
+
+    if not isinstance(post, discord.Thread):
+
+        post, message = await forum.create_thread(
+            name="Island Conquest",
+            content="Welcome to Island Conquest! 🏝️"
+        )
+
+        post_id = post.id
+
+    # Save IDs
+    db.insert_replace(
+        "game_channels",
+        "guild_id, forum_id, post_id",
+        (guild.id, forum_id, post_id)
+    )
+
+    return forum, post
 
 #-----------COMMANDS------------
 conquest_commands = app_commands.Group(
