@@ -109,9 +109,12 @@ async def create_profile(
         "user_id, guild_id, island_name",
         (interaction.user.id, interaction.guild.id, island_name)
     )
-    forum, post = await setup_island_forum(interaction.guild, name)
+    forum, post = await setup_island_forum(interaction.guild, island_name)
 
     await interaction.response.send_message(
         "Profile created. Here is your island:\n"
         f"{post.mention}"
     )
+
+def setup(bot):
+    bot.tree.add_command(conquest_commands)
